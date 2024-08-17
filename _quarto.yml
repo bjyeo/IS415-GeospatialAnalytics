@@ -5,15 +5,20 @@ website:
   title: "IS415-GeospatialAnalytics"
   navbar:
     left:
+      - text: "Hands-on Exercise"
+        menu:
+          - text: "Hands-on Exercise 1"
+            href: "HandsOnEx/Ex01/Ex01.html"
+    right:
       - href: index.qmd
         text: Home
-      - about.qmd
 
 format:
   html:
-    theme: cosmo
+    theme: zephyr
     css: styles.css
     toc: true
+    toc-title: "Outline"
 
 editor: visual
 
