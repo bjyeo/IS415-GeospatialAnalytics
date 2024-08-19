@@ -10,4 +10,5 @@
 _site/HandsOnEx/**/*.txt
 _site/InClassEx/**/*.txt
 _site/TakeHomeEx/**/*.txt
+
 /.quarto/

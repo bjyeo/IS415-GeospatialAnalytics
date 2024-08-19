@@ -1,5 +1,7 @@
 project:
   type: website
+  exclude:
+    - "data/**"
 
 website:
   title: "IS415 Geospatial Analytics"
@@ -9,6 +11,10 @@ website:
         menu:
           - text: "Hands-on Exercise 1"
             href: "HandsOnEx/Ex01/Ex01.html"
+      - text: "In Class Exercise"
+        menu:
+          - text: "In Class Exercise 1"
+            href: "InClassEx/ICE01/ICE01.html"
     right:
       - href: index.qmd
         text: Home
@@ -20,4 +26,4 @@ format:
     toc: true
     toc-title: "Outline"
 
-editor: visual
+editor: source

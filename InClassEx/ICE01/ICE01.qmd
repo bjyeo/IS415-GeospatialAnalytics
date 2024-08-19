@@ -1,0 +1,88 @@
+---
+title: "In Class Exercise 1"
+author: "Bao Jie Yeo"
+date: '2024-08-19'
+---
+
+## Load relevant packages
+
+```{r}
+pacman::p_load(sf, tidyverse)
+```
+
+## Exploring the MPSZ-2019 Dataset
+
+```{r}
+mpsz <- st_read(dsn = "data/geospatial", 
+                layer = "MPSZ-2019")
+```
+
+::: callout-note
+### Reflection
+
+The imported data contains 332 features (representing different subzones in SG) with 6 fields. The geometry type is MULTIPOLYGON, with some areas consisting of multiple polygons (e.g. islands),
+:::
+
+## Check Content of Data Frame
+
+First, we print the information of the feature class using `st_geometry`
+
+```{r}
+st_geometry(mpsz)
+```
+
+We can use `glimpse` to provide information on the data type of each field
+
+```{r}
+glimpse(mpsz)
+```
+
+Finally, use `head` to show the complete info of a feature object
+
+```{r}
+head(mpsz, n=5)
+```
+
+Python users will be familiar with `tail` to show the last few rows of a dataframe
+
+```{r}
+tail(mpsz, n=5)
+```
+
+## Plotting Geospatial Data
+
+```{r}
+plot(mpsz)
+```
+
+```{r}
+plot(mpsz["PLN_AREA_C"])
+```
+
+```{r}
+plot(st_geometry(mpsz))
+```
+
+## Coordinate Systems
+
+```{r}
+st_crs(mpsz)
+```
+
+```{r}
+mpsz3414 <- st_set_crs(mpsz, 3414)
+```
+
+```{r}
+st_crs(mpsz3414)
+```
+
+## Geoprocessing with sf library
+
+### Buffering
+
+```{r}
+st_crs(mpsz)  # Check current CRS
+mpsz_projected <- st_transform(mpsz, 3414)  # Transform to Singapore SVY21 (EPSG:3414)
+mpsz_buffer <- st_buffer(mpsz_projected, dist = 5, nQuadSegs = 30)
+```
