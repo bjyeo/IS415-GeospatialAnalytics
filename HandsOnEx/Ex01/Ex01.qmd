@@ -1,6 +1,7 @@
 ---
 title: "Hands-on Exercise 1"
 author: "Bao Jie Yeo"
+date: '2024-08-16'
 ---
 
 ## Getting Started

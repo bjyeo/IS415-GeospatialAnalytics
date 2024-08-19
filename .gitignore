@@ -5,7 +5,9 @@
 .DS_Store
 .quarto
 
-/.quarto/
+**/data/
 
-HandsOnEx/**/data/
-HandsOnEx/*/data/
+_site/HandsOnEx/**/*.txt
+_site/InClassEx/**/*.txt
+_site/TakeHomeEx/**/*.txt
+/.quarto/
