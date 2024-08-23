@@ -6,6 +6,8 @@
 .quarto
 
 **/data/
+**/tmap_style_previews/
+**/figure-html/
 
 _site/HandsOnEx/**/*.txt
 _site/InClassEx/**/*.txt

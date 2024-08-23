@@ -1,0 +1,476 @@
+---
+title: "Hands-on Exercise 2"
+author: "Bao Jie Yeo"
+date: '2024-08-23'
+editor_options: 
+  chunk_output_type: inline
+---
+
+## Loading Packages
+
+```{r}
+pacman::p_load(sf, tidyverse, tmap)
+```
+
+## Import Geospatial Data
+
+```{r}
+mpsz <- st_read(dsn = "data/geospatial",
+                layer = "MP14_SUBZONE_WEB_PL")
+```
+```{r}
+mpsz
+```
+
+::: callout-warning
+### Output Behaviour
+
+When we call `mpsz`, only the first 10 records are shown because the object is too large to be displayed in its entirety. By default, R only displays the first 10 records.
+:::
+
+## Import Attribute Data
+
+```{r}
+popdata <- read_csv("data/aspatial/respopagesextod2011to2020.csv")
+```
+Calling `spec` on a dataframe displays its structure, including the data types of each column.
+
+```{r}
+spec(popdata)
+```
+## Data Preparation
+
+### Data Wrangling
+
+As part of data preparation, we will use:
+* `pivot_wider` to convert the data from long to wide format
+* `mutate`, `filter`, `group_by` and `select` to clean and filter the data
+
+We do not need to import **tidyr** or **dplyr** because they are already loaded as part of the **tidyverse** package.
+
+```{r}
+popdata2020 <- popdata %>%
+  filter(Time == 2020) %>%
+  group_by(PA, SZ, AG) %>%
+  summarise(`POP` = sum(`Pop`)) %>%
+  ungroup() %>%
+  pivot_wider(names_from = AG, values_from = POP) %>%
+  mutate(`YOUNG` = rowSums(.[3:6]) + rowSums(.[14])) %>%
+  mutate(`ECONOMY ACTIVE` = rowSums(.[7:13])+rowSums(.[15])) %>%
+  mutate(`AGED` = rowSums(.[16:21])) %>%
+  mutate(`TOTAL` = rowSums(.[3:21])) %>%
+  mutate(`DEPENDENCY` = (`YOUNG` + `AGED`)/`ECONOMY ACTIVE`) %>%
+  select(`PA`, `SZ`, `YOUNG`, `ECONOMY ACTIVE`, `AGED`, `TOTAL`, `DEPENDENCY`)
+```
+::: {.callout-caution collapse="true"}
+### Code Analysis
+
+The above code looks daunting, so let's try to break down what it's doing.
+
+1. Filter data for only year 2020 from the dataset
+2. Group data by PA (Planning Area), SZ (Subzone), AG (Age Group). We use `group_by` to prepare data for summarization
+3. Calculate total population for each unique combination of PA, SZ, AG
+4. Call `pivot_wider` to transform data from long to wide. Resultingly, each unique value in AG becomes a new column, with POP values filling the cells. This creates a table where each row represents a unique PA-SZ combination, with columns for each age group
+5. Calculate new demographic variables (YOUNG, ECONOMY ACTIVE, AGED, TOTAL, DEPENDENCY)
+6. Finally, select columns for the output dataset; keeping only key demographic summary variables and identifiers
+:::
+
+### Merging Geospatial and Attribute Data
+
+Using `mutate_at`, we convert the PA and SZ columns to uppercase. This is to ensure consistency in the data before merging with the geospatial data. The `.vars` argument refers to the columns to be modified, while the `.funs` argument specifies the function applied.
+
+```{r}
+popdata2020 <- popdata2020 |>
+  mutate_at(.vars = vars(PA, SZ),
+            .funs = list(toupper)) |>
+  filter(`ECONOMY ACTIVE` > 0)
+```
+
+Next, call `left_join` to join the geospatial data and attribute data on planning subzone name.
+
+```{r}
+mpsz_pop2020 <- left_join(mpsz, popdata2020,
+                          by = c("SUBZONE_N" = "SZ"))
+```
+
+The `write_rds` command saves the merged dataset as an RDS file for future loading.
+
+```{r}
+write_rds(mpsz_pop2020, "data/mpsz_pop2020.rds")
+```
+
+## Plotting Choropleth Maps
+
+### Hacky method of plotting choropleth maps
+
+The first approach we can utilize is using `qtm` from the **tmap** package.
+
+```{r}
+tmap_mode("plot")
+qtm(mpsz_pop2020, fill = "DEPENDENCY")
+```
+### Using `tmap` elements
+
+Instead of using `qtm`, we can use `tm_shape` and `tm_fill` to create a choropleth map. One advantage of this approach is the ability to customize the map layout and elements. 
+
+```{r}
+tm_shape(mpsz_pop2020)+
+  tm_fill("DEPENDENCY", 
+          style = "quantile", 
+          palette = "Blues",
+          title = "Dependency ratio") +
+  tm_layout(main.title = "Distribution of Dependency Ratio by planning subzone",
+            main.title.position = "center",
+            main.title.size = 1.2,
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            frame = TRUE) +
+  tm_borders(alpha = 0.5) +
+  tm_grid(alpha =0.2) +
+  tm_credits("Source: Planning Sub-zone boundary from Urban Redevelopment Authorithy (URA)\n and Population data from Department of Statistics DOS", 
+             position = c("left", "bottom"))
+```
+### Drawing base map
+
+`tm_polygons()` can be used to show the base map without any fill. This may be useful when we want to show only the boundaries of the planning subzones.
+
+```{r}
+tm_shape(mpsz_pop2020) +
+  tm_polygons()
+```
+### Drawing chloropleth map using `tm_polygons()`
+
+Here, we use `tm_polygons()` to draw a choropleth map based on the `DEPENDENCY` variable. The darker highlighted regions represent planning subzones with higher dependency ratios.
+
+```{r}
+tm_shape(mpsz_pop2020) +
+  tm_polygons("DEPENDENCY")
+```
+### Drawing chloropleth map using `tm_fill()`
+
+Instead of using `tm_polygons()`, we can use `tm_fill()` to draw the choropleth map. This function allows us to specify the fill color based on the `DEPENDENCY` variable. We might want to use fill over polygons when the boundaries are not the main focus of the map. 
+
+```{r}
+tm_shape(mpsz_pop2020) +
+  tm_fill("DEPENDENCY")
+```
+### Drawing chloropleth map with `tm_borders()`
+
+By adding borders to the chloropleth map, we can better distinguish between planning subzones. The `tm_borders()` function allows us to customize the border line width and transparency.
+
+Aside from line width and transparency, we can also specify the border color using the `col` argument.
+
+```{r}
+tm_shape(mpsz_pop2020) +
+  tm_fill("DEPENDENCY") +
+  tm_borders(lwd = 0.1,  alpha = 1, col = "darkgreen")
+```
+## Data Classifications
+
+### Using built-in methods
+
+Without specifying the number of classes, `tm_fill()` will use the default classification method. In this case, it uses the `quantile` method to classify the data. 
+
+```{r}
+tm_shape(mpsz_pop2020) +
+  tm_fill("DEPENDENCY",
+          n = 5,
+          style = "quantile",
+          palette = "plasma") +
+  tm_borders(alpha = 0.5)
+```
+```{r}
+tm_shape(mpsz_pop2020) +
+  tm_fill("DEPENDENCY",
+          n = 5,
+          style = "equal") +
+  tm_borders(alpha = 0.5)
+```
+### DIY: Comparison of classification methods
+
+Using what you had learned, prepare choropleth maps by using different classification methods supported by tmap and compare their differences. Prepare a grid showing the maps side by side of different tmap styles.
+
+```{r}
+# Create maps with different classification methods
+map_fixed <- tm_shape(mpsz_pop2020) +
+  tm_fill("DEPENDENCY", style = "fixed") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(title = "Fixed")
+
+map_sd <- tm_shape(mpsz_pop2020) +
+  tm_fill("DEPENDENCY", style = "sd") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(title = "Standard Deviation")
+
+map_equal <- tm_shape(mpsz_pop2020) +
+  tm_fill("DEPENDENCY", style = "equal") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(title = "Equal Interval")
+
+map_pretty <- tm_shape(mpsz_pop2020) +
+  tm_fill("DEPENDENCY", style = "pretty") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(title = "Pretty (Default)")
+
+map_quantile <- tm_shape(mpsz_pop2020) +
+  tm_fill("DEPENDENCY", style = "quantile") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(title = "Quantile")
+
+map_kmeans <- tm_shape(mpsz_pop2020) +
+  tm_fill("DEPENDENCY", style = "kmeans") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(title = "K-means")
+
+map_hclust <- tm_shape(mpsz_pop2020) +
+  tm_fill("DEPENDENCY", style = "hclust") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(title = "Hierarchical Clustering")
+
+map_bclust <- tm_shape(mpsz_pop2020) +
+  tm_fill("DEPENDENCY", style = "bclust") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(title = "Bagged Clustering")
+
+map_fisher <- tm_shape(mpsz_pop2020) +
+  tm_fill("DEPENDENCY", style = "fisher") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(title = "Fisher-Jenks")
+
+map_jenks <- tm_shape(mpsz_pop2020) +
+  tm_fill("DEPENDENCY", style = "jenks") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(title = "Jenks (Natural Breaks)")
+```
+
+```{r}
+tmap_arrange(map_hclust, map_bclust, map_fisher, map_jenks, ncol=2)
+```
+
+We can see from above that the different classification methods result in different choropleth maps. The choice of classification method can affect how the data is represented and interpreted. 
+
+Here we are concerned with the distribution of dependency ratios. In my opinion, using the `jenks` classification method provides a clearer representation of the data distribution since it groups the data into classes based on natural breaks.
+
+### DIY: Comparison of different numbered classes
+
+Using the same dataset, prepare choropleth maps with different numbers of classes and compare their differences. Prepare a grid showing the maps side by side with different numbers of classes.
+
+```{r}
+# Create maps with different number of classes
+map_2c <- tm_shape(mpsz_pop2020) +
+  tm_fill("DEPENDENCY", n = 3, style = "pretty") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(title = "2 Classes")
+
+map_6c <- tm_shape(mpsz_pop2020) +
+  tm_fill("DEPENDENCY", n = 4, style = "pretty") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(title = "6 Classes")
+
+map_10c <- tm_shape(mpsz_pop2020) +
+  tm_fill("DEPENDENCY", n = 5, style = "pretty") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(title = "10 Classes")
+
+map_20c <- tm_shape(mpsz_pop2020) +
+  tm_fill("DEPENDENCY", n = 10, style = "pretty") +
+  tm_borders(alpha = 0.5) +
+  tm_layout(title = "20 Classes")
+```
+
+```{r}
+tmap_arrange(map_2c, map_6c, map_10c, map_20c, ncol=2)
+```
+When we add more classes, the map becomes more detailed, but it may also become harder to interpret. The map with 2 classes is too simplistic, while the map with 20 classes is too detailed to tell the finer differences between the colors on the map.
+
+### Using custom breaks
+
+```{r}
+summary(mpsz_pop2020$DEPENDENCY)
+```
+
+```{r}
+tm_shape(mpsz_pop2020) +
+  tm_fill("DEPENDENCY",
+          breaks = c(0, 0.60, 0.70, 0.80, 0.90, 1.00)) +
+  tm_borders(alpha = 0.5)
+```
+
+## Color Schemes
+
+### Exploring Color Palettes
+
+Running the code chunk below opens an interactive Shiny app that allows you to explore different color palettes offered by default in RColorBrewer.
+
+Knowing what color palettes are available can help you choose the most appropriate one for your data visualization. For example, some of the best color palettes to use to when presenting data to colorblind individuals are `viridis`, `cividis`, and `colorblind`.
+
+```{r}
+# pacman::p_load(shiny, shinyjs)
+# 
+# tmaptools::palette_explorer()
+```
+
+
+### ColorBrewer Palette
+
+```{r}
+tm_shape(mpsz_pop2020) +
+  tm_fill("DEPENDENCY",
+          n = 6,
+          style = "quantile",
+          palette = "Greens") +
+  tm_borders(alpha = 0.5)
+```
+
+### Reverse ColorBrewer Palette
+
+Adding the `reverse` argument to the `palette` parameter will reverse the color scheme. This can be useful to highlight the highest values with a lighter color.
+
+```{r}
+tm_shape(mpsz_pop2020)+
+  tm_fill("DEPENDENCY",
+          style = "quantile",
+          palette = "-Greens") +
+  tm_borders(alpha = 0.5)
+```
+
+### Viridis Palette
+
+```{r}
+tm_shape(mpsz_pop2020) +
+  tm_fill("DEPENDENCY",
+          style = "quantile",
+          palette = "viridis") +
+  tm_borders(alpha = 0.5)
+```
+
+## Map Layouts
+
+### Adding Map Legend
+
+```{r}
+tm_shape(mpsz_pop2020) +
+  tm_fill("DEPENDENCY", 
+          style = "jenks", 
+          palette = "Blues", 
+          legend.hist = TRUE, 
+          legend.is.portrait = TRUE,
+          legend.hist.z = 0.1) +
+  tm_layout(main.title = "Distribution of Dependency Ratio by planning subzone \n(Jenks classification)",
+            main.title.position = "center",
+            main.title.size = 1,
+            legend.height = 0.45, 
+            legend.width = 0.35,
+            legend.outside = FALSE,
+            legend.position = c("right", "bottom"),
+            frame = FALSE) +
+  tm_borders(alpha = 0.5)
+```
+
+### Map Style
+
+```{r}
+tm_shape(mpsz_pop2020) +
+  tm_fill("DEPENDENCY", 
+          style = "quantile", 
+          palette = "-Greens") +
+  tm_borders(alpha = 0.5) +
+  tmap_style("natural")
+```
+
+### Adding Scale Bar
+
+```{r}
+tm_shape(mpsz_pop2020) +
+  tm_fill("DEPENDENCY", 
+          style = "quantile", 
+          palette = "-Greens") +
+  tm_borders(alpha = 0.5) +
+  tm_scale_bar(width = 0.15)
+```
+
+### Cartographic Elements
+
+```{r}
+tm_shape(mpsz_pop2020) +
+  tm_fill("DEPENDENCY", 
+          style = "quantile", 
+          palette = "-Greens") +
+  tm_borders(alpha = 0.5) +
+  tm_compass(type="8star", size = 2) +
+  tm_scale_bar(width = 0.15) +
+  tm_grid(lwd = 0.1, alpha = 0.2) +
+  tm_credits("Source: Planning Sub-zone boundary from Urban Redevelopment Authorithy (URA)\n and Population data from Department of Statistics DOS", 
+             position = c("left", "bottom"))
+```
+
+## Plotting Multiple Chloropleth Maps
+
+Here, we are plotting 2 maps side by side to represent the distribution of young and aged populations in planning subzones.
+
+```{r}
+tm_shape(mpsz_pop2020)+
+  tm_fill(c("YOUNG", "AGED"),
+          style = "equal", 
+          palette = "Blues") +
+  tm_layout(legend.position = c("right", "bottom")) +
+  tm_borders(alpha = 0.5) +
+  tmap_style("white")
+```
+
+### Defining group_by variable in `tm_facets()`
+
+Here, we use the `tm_facets()` function to create maps for each region in Singapore.
+
+```{r}
+tm_shape(mpsz_pop2020) +
+  tm_fill("DEPENDENCY",
+          style = "quantile",
+          palette = "Blues",
+          thres.poly = 0) + 
+  tm_facets(by="REGION_N", 
+            free.coords=TRUE, 
+            drop.shapes=TRUE) +
+  tm_layout(legend.show = FALSE,
+            title.position = c("center", "center"), 
+            title.size = 20) +
+  tm_borders(alpha = 0.5)
+```
+
+### Using `tm_arrange()`
+
+Instead of using `tm_facets()`, we can use `tm_arrange()` to create multiple maps side by side. This function allows us to arrange maps in a grid layout.
+
+```{r}
+youngmap <- tm_shape(mpsz_pop2020)+ 
+  tm_polygons("YOUNG", 
+              style = "quantile", 
+              palette = "Blues")
+
+agedmap <- tm_shape(mpsz_pop2020)+ 
+  tm_polygons("AGED", 
+              style = "quantile", 
+              palette = "Blues")
+
+tmap_arrange(youngmap, agedmap, asp=1, ncol=2)
+```
+
+## Mapping Spatial Object based on Selection Criterion
+
+What we are trying to do here is to plot a choropleth map of the Central Region based on the dependency ratio. The legend is a histogram that shows the distribution of dependency ratios in the region.
+
+```{r}
+tm_shape(mpsz_pop2020[mpsz_pop2020$REGION_N == "CENTRAL REGION", ])+
+  tm_fill("DEPENDENCY", 
+          style = "quantile", 
+          palette = "Blues", 
+          legend.hist = TRUE, 
+          legend.is.portrait = TRUE,
+          legend.hist.z = 0.1) +
+  tm_layout(legend.outside = TRUE,
+            legend.height = 0.45, 
+            legend.width = 5.0,
+            legend.position = c("right", "bottom"),
+            frame = FALSE) +
+  tm_borders(alpha = 0.5)
+```

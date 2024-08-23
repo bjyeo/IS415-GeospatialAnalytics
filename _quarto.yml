@@ -1,7 +1,8 @@
 project:
   type: website
-  exclude:
-    - "data/**"
+  render:
+    - "*.qmd"
+    - "!data/**"
 
 website:
   title: "IS415 Geospatial Analytics"
@@ -11,6 +12,8 @@ website:
         menu:
           - text: "Hands-on Exercise 1"
             href: "HandsOnEx/Ex01/Ex01.html"
+          - text: "Hands-on Exercise 2"
+            href: "HandsOnEx/Ex02/Ex02.html"
       - text: "In Class Exercise"
         menu:
           - text: "In Class Exercise 1"
