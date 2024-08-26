@@ -2,6 +2,10 @@
 title: "In Class Exercise 1"
 author: "Bao Jie Yeo"
 date: '2024-08-19'
+execute: 
+  eval: true
+  echo: true
+  freeze: true
 ---
 
 ## Load relevant packages

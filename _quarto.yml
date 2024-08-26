@@ -18,6 +18,8 @@ website:
         menu:
           - text: "In Class Exercise 1"
             href: "InClassEx/ICE01/ICE01.html"
+          - text: "In Class Exercise 2"
+            href: "InClassEx/ICE02/ICE02.html"
     right:
       - href: index.qmd
         text: Home

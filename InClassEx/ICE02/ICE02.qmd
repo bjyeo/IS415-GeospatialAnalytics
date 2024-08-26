@@ -1,0 +1,97 @@
+---
+title: "In Class Exercise 2"
+author: "Bao Jie Yeo"
+date: "2024-08-26"
+date-modified: "last-modified"
+---
+
+## Loading Packages
+```{r}
+pacman::p_load(sf, tidyverse, tmap)
+```
+
+## Load Geospatial Data
+
+```{r}
+mpsz2014_shp <- st_read(dsn = "data/geospatial",
+                    layer = "MP14_SUBZONE_WEB_PL")
+```
+```{r}
+st_write(mpsz2014_shp, "data/geospatial/MP14_SUBZONE_WEB_PL.kml",delete_dsn = TRUE)
+```
+```{r}
+mpsz2014_kml = st_read('data/geospatial/MP14_SUBZONE_WEB_PL.kml')
+```
+```{r}
+mpsz2019_kml = st_read('data/geospatial/MasterPlan2019SubzoneBoundaryNoSeaKML.kml')
+```
+```{r}
+mpsz2019_shp = st_read(dsn = "./data/geospatial", layer = "MPSZ-2019") |>
+    st_transform(crs = 3414)
+```
+```{r}
+preschool = st_read('data/geospatial/PreSchoolsLocation.kml')
+```
+```{r}
+st_crs(mpsz2019_shp)
+```
+
+## Loading Population Data
+
+```{r}
+popdata <- read.csv("data/aspatial/respopagesextod2023.csv")
+```
+
+```{r}
+popdata2023 <- popdata %>% 
+  group_by(PA, SZ, AG) %>%
+  summarise(`POP` = sum(`Pop`)) %>% 
+  ungroup() %>%
+  pivot_wider(names_from = AG, values_from = POP)
+
+colnames(popdata2023)
+```
+```{r}
+popdata2023 <- popdata %>% 
+  group_by(PA,SZ,AG) %>%
+  summarise(`POP` = sum(`Pop`)) %>%
+  ungroup() %>%
+  pivot_wider(names_from = AG,
+              values_from = POP)%>%
+  mutate(YOUNG = rowSums(.[3:6])
+         +rowSums(.[14])) %>%
+mutate(`ECONOMY ACTIVE` = rowSums(.[7:13])+
+rowSums(.[15]))%>%
+mutate(`AGED`=rowSums(.[16:21])) %>%
+mutate(`TOTAL`=rowSums(.[3:21])) %>%  
+mutate(`DEPENDENCY` = (`YOUNG` + `AGED`)
+/`ECONOMY ACTIVE`) %>%
+  select(`PA`, `SZ`, `YOUNG`, 
+       `ECONOMY ACTIVE`, `AGED`, 
+       `TOTAL`, `DEPENDENCY`)
+```
+```{r}
+popdata2023 <- popdata2023 %>%
+  mutate_at(.vars = vars(PA, SZ),
+            .funs = list(toupper))
+```
+
+```{r}
+head(popdata2023)
+```
+```{r}
+pop2023_mpsz <- left_join(popdata2023, mpsz2019_shp,
+                          by = c("SZ" = "SUBZONE_N"))
+```
+
+```{r}
+head(pop2023_mpsz, n=10)
+```
+```{r}
+mpsz_pop2023 <- left_join(mpsz2019_shp, popdata2023, 
+                          by = c("SUBZONE_N" = "SZ"))
+```
+
+```{r}
+head(mpsz_pop2023, n=10)
+```
