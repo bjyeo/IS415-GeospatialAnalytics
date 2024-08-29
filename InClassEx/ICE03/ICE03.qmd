@@ -1,0 +1,11 @@
+---
+title: "In Class Exercise 3"
+author: "Bao Jie Yeo"
+date: '2024-09-02'
+execute: 
+  eval: true
+  echo: true
+  freeze: true
+---
+
+Stay tuned for more updates!

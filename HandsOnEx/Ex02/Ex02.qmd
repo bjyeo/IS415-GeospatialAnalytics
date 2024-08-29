@@ -2,12 +2,11 @@
 title: "Hands-on Exercise 2"
 author: "Bao Jie Yeo"
 date: '2024-08-23'
+date-modified: '2024-08-23'
 execute: 
   eval: true
   echo: true
   freeze: true
-editor_options: 
-  chunk_output_type: inline
 ---
 
 ## Loading Packages
