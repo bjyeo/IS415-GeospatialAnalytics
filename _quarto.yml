@@ -3,6 +3,8 @@ project:
   render:
     - "*.qmd"
     - "!data/**"
+    - "Ex03.qmd"
+    - "Ex02.qmd"
 
 website:
   title: "IS415 Geospatial Analytics"
