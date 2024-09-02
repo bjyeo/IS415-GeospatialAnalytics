@@ -2,10 +2,30 @@
 title: "In Class Exercise 3"
 author: "Bao Jie Yeo"
 date: '2024-09-02'
-execute: 
-  eval: true
-  echo: true
-  freeze: true
+date-modified: '2024-09-02'
 ---
 
-Stay tuned for more updates!
+## Getting Started
+
+```{r}
+pacman::p_load(sf, tidyverse)
+```
+
+```{r}
+#| eval: false
+install.packages('maptools', repos="https://packagemanager.posit.co/cran/2023-10-13")
+```
+We cannot do `p_load` for `maptools` because it is not available in the CRAN repository. We will have to install it manually. We can use `#| eval: false` to prevent the code chunk from being evaluated. The next time we want to load `maptools`, we can use `library(maptools)`.
+
+## Import Myanmar Data
+
+```{r}
+acled_sf <- read_csv("data/geospatial/ACLED_Myanmar.csv") |>
+  st_as_sf(coords = c(
+    "longitude", "latitude"),
+    crs = 4326) |>
+  st_transform(crs = 32647) |>
+  mutate(event_date = dmy(event_date))
+```
+
+
