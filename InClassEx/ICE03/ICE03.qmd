@@ -8,7 +8,7 @@ date-modified: '2024-09-02'
 ## Getting Started
 
 ```{r}
-pacman::p_load(sf, tidyverse)
+pacman::p_load(sf, tidyverse, tmap)
 ```
 
 ```{r}
@@ -28,4 +28,12 @@ acled_sf <- read_csv("data/geospatial/ACLED_Myanmar.csv") |>
   mutate(event_date = dmy(event_date))
 ```
 
+```{r}
+# tmap_mode('view')
+# acled_sf |>
+#   filter(year == 2023 | event_type == 'Political Violence') |>
+#   tm_shape() +
+#   tm_dots()
+# tmap_mode('plot')
+```
 
