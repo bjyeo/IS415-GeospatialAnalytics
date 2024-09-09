@@ -5,6 +5,7 @@ project:
     - "!data/**"
     - "Ex03.qmd"
     - "Ex02.qmd"
+    - "ICE04.qmd"
 
 website:
   title: "IS415 Geospatial Analytics"
@@ -18,6 +19,8 @@ website:
             href: "HandsOnEx/Ex02/Ex02.html"
           - text: "Hands-on Exercise 3"
             href: "HandsOnEx/Ex03/Ex03.html"
+          - text: "Hands-on Exercise 4"
+            href: "InClassEx/ICE04/ICE04.html"
       - text: "In Class Exercise"
         menu:
           - text: "In Class Exercise 1"
@@ -26,6 +29,8 @@ website:
             href: "InClassEx/ICE02/ICE02.html"
           - text: "In Class Exercise 3"
             href: "InClassEx/ICE03/ICE03.html"
+          - text: "In Class Exercise 4"
+            href: "InClassEx/ICE04/ICE04.html"
     right:
       - href: index.qmd
         text: Home

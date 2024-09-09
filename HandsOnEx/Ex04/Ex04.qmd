@@ -1,0 +1,47 @@
+---
+title: "Hands-on Exercise 4"
+author: "Bao Jie Yeo"
+date: '2024-09-03'
+date-modified: '2024-09-03'
+execute: 
+  eval: true
+  echo: true
+  freeze: true
+---
+
+```{r}
+pacman::p_load(sf, spNetwork, tmap, tidyverse)
+```
+
+```{r}
+network <- st_read(dsn="data/geospatial",
+                   layer="Punggol_St")
+```
+
+```{r}
+childcare <- st_read(dsn="data/geospatial",
+                     layer="Punggol_CC")
+```
+::: {.panel-tabset}
+## Childcare
+```{r}
+#| code-copy: true
+childcare
+```
+
+## Network
+```{r}
+#| code-copy: true
+print(network)
+```
+:::
+
+::: {.callout-note title="DYOR :)" collapse=true}
+
+Wondering how I created the neat panel above? Well I'll show you how, cuz Prof Kam won't! He encourages all of us prospective geographers to go do our own research, and you should too!
+
+:::
+
+
+
+
