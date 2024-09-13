@@ -12,5 +12,6 @@ _site/InClassEx/**/*.txt
 _site/TakeHomeEx/**/*.txt
 
 TakeHomeEx/
+Ex06/
 
 /.quarto/

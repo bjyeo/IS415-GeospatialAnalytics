@@ -25,6 +25,7 @@ The aim is to answer specific questions like:
 
 ::: {.callout-note title="Pre-Exercise Thoughts" collapse="true"}
 Initial hypotheses:
+
 1. Childcare centres are randomly distributed throughout Singapore because they have to cater to the population.
 2. But, consider that childcare centres may be more concentrated in areas with higher population density.
 
@@ -34,6 +35,7 @@ I am not sure if they are correct. But we will be revisiting these hypotheses af
 ## Loading Required Libraries
 
 We are already familiar with **sf**, **tmap**, **tidyverse** which we have covered. Aside from these, we will also be loading:
+
 * **spatstat** - for 1st and 2nd order spatial point pattern analysis and KDE
 * **raster** - manipulation of gridded spatial data
 * **maptools** - manipulating geographic data, converting *Spatial* objects into *ppp* objects
@@ -130,11 +132,13 @@ sg_sp
 ```
 **Challenge:**
 Spatial\* Classes:
+
 * Specific classes for different types of spatial data (e.g. SpatialPoints, SpatialLines, SpatialPolygons etc.)
 * Each class is optimized for a particular type of spatial data.
 * They have specific methods and functions tailored to their data type.
 
 Generic sp Objects:
+
 * More general-purpose spatial objects that can represent various types of spatial data.
 * More flexible but may be less efficient compared to Spatial\* classes.
 

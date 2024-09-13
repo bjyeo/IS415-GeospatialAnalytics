@@ -163,5 +163,3 @@ f.breve <- spattemp.density(fmd_case, h=hlam[1], lambda=hlam[2], tlim=c(10, 352)
 g.tilde <- bivariate.density(fmd_cont, h0=hlam[1])
 rho.breve <- spattemp.risk(f=f.breve, g=g.tilde, tolerate=TRUE)
 ```
-
-
