@@ -234,7 +234,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#contested-areas-and-relative-impact" id="toc-contested-areas-and-relative-impact" class="nav-link" data-scroll-target="#contested-areas-and-relative-impact">4.3 Contested Areas and Relative Impact</a></li>
   <li><a href="#overall-analysis" id="toc-overall-analysis" class="nav-link" data-scroll-target="#overall-analysis">4.4 Overall Analysis</a></li>
   </ul></li>
-  <li><a href="#first-order-spatial-temporal-patterns-analysis-a-closer-look-at-the-myanmar-conflict-landscape" id="toc-first-order-spatial-temporal-patterns-analysis-a-closer-look-at-the-myanmar-conflict-landscape" class="nav-link" data-scroll-target="#first-order-spatial-temporal-patterns-analysis-a-closer-look-at-the-myanmar-conflict-landscape">5.0 First Order Spatial-Temporal Patterns Analysis: A Closer Look at the Myanmar Conflict Landscape</a></li>
+  <li><a href="#first-order-spatial-temporal-patterns-analysis-a-closer-look-at-the-myanmar-conflict-landscape" id="toc-first-order-spatial-temporal-patterns-analysis-a-closer-look-at-the-myanmar-conflict-landscape" class="nav-link" data-scroll-target="#first-order-spatial-temporal-patterns-analysis-a-closer-look-at-the-myanmar-conflict-landscape">5.0 First Order Spatial-Temporal Patterns Analysis: A Closer Look at the Myanmar Conflict Landscape</a>
+  <ul class="collapse">
+  <li><a href="#kernel-density-estimation" id="toc-kernel-density-estimation" class="nav-link" data-scroll-target="#kernel-density-estimation">5.1 Kernel Density Estimation</a></li>
+  </ul></li>
   <li><a href="#second-order-spatial-temporal-patterns-analysis-focused-exploration-of-conflict-dynamics" id="toc-second-order-spatial-temporal-patterns-analysis-focused-exploration-of-conflict-dynamics" class="nav-link" data-scroll-target="#second-order-spatial-temporal-patterns-analysis-focused-exploration-of-conflict-dynamics">6.0 Second Order Spatial-Temporal Patterns Analysis: Focused Exploration of Conflict Dynamics</a></li>
   <li><a href="#openstreetmap-integration-geospatial-visualization-of-conflict-events" id="toc-openstreetmap-integration-geospatial-visualization-of-conflict-events" class="nav-link" data-scroll-target="#openstreetmap-integration-geospatial-visualization-of-conflict-events">7.0 OpenStreetMap Integration: Geospatial Visualization of Conflict Events</a></li>
   <li><a href="#bonus-predictive-modelling-of-conflict-events" id="toc-bonus-predictive-modelling-of-conflict-events" class="nav-link" data-scroll-target="#bonus-predictive-modelling-of-conflict-events">8.0 Bonus: Predictive Modelling of Conflict Events</a></li>
@@ -299,7 +302,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="loading-packages" class="level3">
 <h3 class="anchored" data-anchor-id="loading-packages">3.1 Loading Packages</h3>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(sf, tidyverse, tmap, maptools, raster, spatstat, sp, sparr, leaflet, OpenStreetMap, stars, RColorBrewer, knitr, igraph, ggnetwork, viridis, ggrepel)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>pacman<span class="sc">::</span><span class="fu">p_load</span>(sf, tidyverse, tmap, maptools, raster, spatstat, sp, sparr, leaflet, OpenStreetMap, stars, RColorBrewer, knitr, igraph, viridis, ggrepel, patchwork, gridExtra)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="loading-data" class="level3">
@@ -312,13 +315,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>acled_sf <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(<span class="st">"data/geospatial/ACLED_Myanmar.csv"</span>) <span class="sc">|&gt;</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_as_sf</span>(<span class="at">coords =</span> <span class="fu">c</span>(<span class="st">"longitude"</span>, <span class="st">"latitude"</span>), <span class="at">crs =</span> <span class="dv">4326</span>) <span class="sc">|&gt;</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">st_transform</span>(<span class="at">crs =</span> <span class="dv">32647</span>) <span class="sc">|&gt;</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">event_date =</span> <span class="fu">dmy</span>(event_date)) <span class="sc">|&gt;</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">quarter =</span> <span class="fu">paste0</span>(year, <span class="st">"-Q"</span>, <span class="fu">quarter</span>(event_date, <span class="at">with_year =</span> <span class="cn">FALSE</span>)),</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">quarter =</span> <span class="fu">factor</span>(quarter)</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">relocate</span>(quarter, <span class="at">.after =</span> year)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">event_date =</span> <span class="fu">dmy</span>(event_date)) <span class="sc">|&gt;</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">quarter =</span> <span class="fu">paste0</span>(year, <span class="st">"-Q"</span>, <span class="fu">quarter</span>(event_date, <span class="at">with_year =</span> <span class="cn">FALSE</span>)),</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">quarter =</span> <span class="fu">factor</span>(quarter)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">relocate</span>(quarter, <span class="at">.after =</span> year)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Rows: 51553 Columns: 32
 ── Column specification ────────────────────────────────────────────────────────
@@ -336,8 +338,8 @@ dbl (12): year, time_precision, inter1, inter2, interaction, iso, latitude, ...
 <pre><code>Simple feature collection with 10 features and 31 fields
 Geometry type: POINT
 Dimension:     XY
-Bounding box:  xmin: 76997.72 ymin: 2428487 xmax: 262561.5 ymax: 2559463
-Projected CRS: WGS 84 / UTM zone 47N
+Bounding box:  xmin: 94.9021 ymin: 21.9251 xmax: 96.6819 ymax: 23.1269
+Geodetic CRS:  WGS 84
 # A tibble: 10 × 32
    event_id_cnty event_date  year quarter time_precision disorder_type         
    &lt;chr&gt;         &lt;date&gt;     &lt;dbl&gt; &lt;fct&gt;            &lt;dbl&gt; &lt;chr&gt;                 
@@ -357,7 +359,7 @@ Projected CRS: WGS 84 / UTM zone 47N
 #   region &lt;chr&gt;, country &lt;chr&gt;, admin1 &lt;chr&gt;, admin2 &lt;chr&gt;, admin3 &lt;chr&gt;,
 #   location &lt;chr&gt;, geo_precision &lt;dbl&gt;, source &lt;chr&gt;, source_scale &lt;chr&gt;,
 #   notes &lt;chr&gt;, fatalities &lt;dbl&gt;, tags &lt;chr&gt;, timestamp &lt;dbl&gt;,
-#   population_best &lt;dbl&gt;, geometry &lt;POINT [m]&gt;</code></pre>
+#   population_best &lt;dbl&gt;, geometry &lt;POINT [°]&gt;</code></pre>
 </div>
 </div>
 <div class="cell">
@@ -638,16 +640,19 @@ Geodetic CRS:  WGS 84</code></pre>
 </div>
 <p>Key Observations:</p>
 <ol type="1">
-<li>Central Node - Myanmar Armed Forces: Being the largest node in the graph, the military forces has connections to almost all other actors. Unsurprisingly, it is the most connected and influential actor in the conflict. This is unsurprising for several reasons:</li>
-</ol>
+<li>Central Node - Myanmar Armed Forces: Being the largest node in the graph, the military forces has connections to almost all other actors. Unsurprisingly, it is the most connected and influential actor in the conflict. This is unsurprising for several reasons:
 <ul>
 <li>The national military is engaged in conflicts with multiple groups across the country</li>
 <li>It has the resources and reach to be involved in most conflict events</li>
-</ul>
-<ol start="2" type="1">
+</ul></li>
 <li>Civilian (Myanmar) Node: The second largest node represents civilians. Civilians are frequently targets or involved in conflict events.</li>
 </ol>
-<p><strong>Section Recap</strong> 1. Central and Northern regions show higher conflict events 2. Myanmar Armed Forces is the primary actor in the conflict 3. The volatile situation may give way to further escalation</p>
+<p><strong>Section Recap</strong></p>
+<ol type="1">
+<li>Central and Northern regions show higher conflict events</li>
+<li>Myanmar Armed Forces is the primary actor in the conflict</li>
+<li>The volatile situation may give way to further escalation</li>
+</ol>
 </section>
 <section id="progression-of-conflict" class="level3">
 <h3 class="anchored" data-anchor-id="progression-of-conflict">4.2 Progression of Conflict</h3>
@@ -679,12 +684,10 @@ Geodetic CRS:  WGS 84</code></pre>
 </div>
 <p>Key Observations:</p>
 <ol type="1">
-<li>Peak and Decline: There is a clear peak in conflict events around 2021-Q2 to 2022-Q1, around the start of the conflict. Subsequently, there is a general decline in conflict events over time.</li>
-</ol>
+<li>Peak and Decline: There is a clear peak in conflict events around 2021-Q2 to 2022-Q1, around the start of the conflict. Subsequently, there is a general decline in conflict events over time.
 <ul>
 <li>The conflict might be starting to stabilize or reduce in intensity.</li>
-</ul>
-<ol start="2" type="1">
+</ul></li>
 <li>Recent Fluctuations: The overall trend may be downward, but there are <strong>noticeable fluctuations in the most recent quarters</strong>, suggesting the conflict remains volatile.</li>
 <li>Uncertainty in Trend: The large confidence area presents a high degree of uncertainty. This could prove <strong>challenging to make definitive predictions about future conflict patterns</strong> based on this data alone.</li>
 </ol>
@@ -758,13 +761,11 @@ Geodetic CRS:  WGS 84</code></pre>
 </div>
 <p>Key Observations:</p>
 <ol type="1">
-<li>Spatial Concentration: Conflict events are densely concentrated in the Central, Northern and Southern regions of Myanmar.</li>
-</ol>
+<li>Spatial Concentration: Conflict events are densely concentrated in the Central, Northern and Southern regions of Myanmar.
 <ul>
 <li>Central/Northern Hotspots: <strong>Sagaing, Magway, Mandalay, Shan</strong></li>
 <li>Southern Hotspots: <strong>Yangon</strong></li>
-</ul>
-<ol start="2" type="1">
+</ul></li>
 <li>Stabilization of Conflict: The density of each hotspot appears to decrease over time, suggesting a potential stabilization of the conflict in these areas.</li>
 </ol>
 <p><strong>Section Recap</strong></p>
@@ -847,13 +848,11 @@ Geodetic CRS:  WGS 84</code></pre>
 </div>
 <p>Key Observations:</p>
 <ol type="1">
-<li>Severity Hotspots: Regions in the upper right quadrant experience intense conflict with both high event frequency and high fatalities.</li>
-</ol>
+<li>Severity Hotspots: Regions in the upper right quadrant experience intense conflict with both high event frequency and high fatalities.
 <ul>
 <li>Sagaing’s position in the upper right corner indicates it’s the most severely affected region.</li>
 <li>Magway, Shan and Mandalay also show high levels of conflict intensity.</li>
-</ul>
-<ol start="2" type="1">
+</ul></li>
 <li>Outliers: Yangon shows an interesting pattern with a relatively high number of events but lower fatalities, <strong>possibly indicating a different nature of conflict</strong>.</li>
 </ol>
 <p><strong>Section Recap</strong></p>
@@ -865,18 +864,14 @@ Geodetic CRS:  WGS 84</code></pre>
 <section id="overall-analysis" class="level3">
 <h3 class="anchored" data-anchor-id="overall-analysis">4.4 Overall Analysis</h3>
 <ol type="1">
-<li><strong>Conflict Intensity and Distribution</strong>: The conflict in Myanmar is not uniformly distributed, with clear hotspots in the Central and Northern regions.</li>
-</ol>
+<li><strong>Conflict Intensity and Distribution</strong>: The conflict in Myanmar is not uniformly distributed, with clear hotspots in the Central and Northern regions.
 <ul>
 <li>Hypothesis: The spatial distribution of conflict events is <em>not random</em>.</li>
-</ul>
-<ol start="2" type="1">
-<li><strong>Temporal Trends and Conflict Evolution</strong>: While there’s an overall declining trend in conflict events since the peak in 2021 - 2022, fatalities remain high, and recent fluctuations suggest ongoing volatality. This pattern indicates a potential shift in conflict dynamics rather than de-escalation.</li>
-</ol>
+</ul></li>
+<li><strong>Temporal Trends and Conflict Evolution</strong>: While there’s an overall declining trend in conflict events since the peak in 2021 - 2022, fatalities remain high, and recent fluctuations suggest ongoing volatality. This pattern indicates a potential shift in conflict dynamics rather than de-escalation.
 <ul>
 <li>Research Question: How has the nature of the conflict changed over time, and what factors are contributing to the sustained high fatality rates despite decreasing event frequency?</li>
-</ul>
-<ol start="3" type="1">
+</ul></li>
 <li><strong>Central Role of Myanmar Armed Forces</strong>: The miltary is overwhelmingly involved in conflict events. Their dominance suggests an asymmetric conflict where state forces are engaged against multiple, smaller opposition groups and civilian resistance.</li>
 <li><strong>Regional Variations in Conflict Characteristics</strong>: The Southern front on a whole is relatively less contested, though Yangon shows a unique pattern.</li>
 </ol>
@@ -884,6 +879,224 @@ Geodetic CRS:  WGS 84</code></pre>
 </section>
 <section id="first-order-spatial-temporal-patterns-analysis-a-closer-look-at-the-myanmar-conflict-landscape" class="level2">
 <h2 class="anchored" data-anchor-id="first-order-spatial-temporal-patterns-analysis-a-closer-look-at-the-myanmar-conflict-landscape">5.0 First Order Spatial-Temporal Patterns Analysis: A Closer Look at the Myanmar Conflict Landscape</h2>
+<section id="kernel-density-estimation" class="level3">
+<h3 class="anchored" data-anchor-id="kernel-density-estimation">5.1 Kernel Density Estimation</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>kde_quarterly <span class="ot">&lt;-</span> <span class="cf">function</span>(data, quarter, <span class="at">bw =</span> <span class="cn">NULL</span>, <span class="at">adaptive =</span> <span class="cn">FALSE</span>) {</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  data_quarter <span class="ot">&lt;-</span> data <span class="sc">%&gt;%</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(quarter <span class="sc">==</span> <span class="sc">!!</span>quarter)</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>  window <span class="ot">&lt;-</span> <span class="fu">as.owin</span>(<span class="fu">st_bbox</span>(adm0))</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>  coords <span class="ot">&lt;-</span> <span class="fu">st_coordinates</span>(data_quarter)</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Remove exact duplicates before creating ppp object</span></span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>  unique_coords <span class="ot">&lt;-</span> <span class="fu">unique</span>(coords)</span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>  ppp_obj <span class="ot">&lt;-</span> <span class="fu">ppp</span>(unique_coords[,<span class="dv">1</span>], unique_coords[,<span class="dv">2</span>], <span class="at">window =</span> window)</span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>  ppp_obj <span class="ot">&lt;-</span> <span class="fu">rjitter</span>(ppp_obj, <span class="at">retry =</span> <span class="cn">TRUE</span>, <span class="at">nsim =</span> <span class="dv">1</span>, <span class="at">drop =</span> <span class="cn">TRUE</span>, <span class="at">max =</span> <span class="fl">0.001</span>)</span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>  ppp_obj <span class="ot">&lt;-</span> <span class="fu">unique.ppp</span>(ppp_obj)</span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">is.null</span>(bw)) {</span>
+<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>    bw <span class="ot">&lt;-</span> <span class="fu">bw.scott</span>(ppp_obj)</span>
+<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb27-19"><a href="#cb27-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tryCatch</span>({</span>
+<span id="cb27-20"><a href="#cb27-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (adaptive) {</span>
+<span id="cb27-21"><a href="#cb27-21" aria-hidden="true" tabindex="-1"></a>      kde <span class="ot">&lt;-</span> <span class="fu">adaptive.density</span>(ppp_obj, <span class="at">bw =</span> bw, <span class="at">edge =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb27-22"><a href="#cb27-22" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
+<span id="cb27-23"><a href="#cb27-23" aria-hidden="true" tabindex="-1"></a>      kde <span class="ot">&lt;-</span> <span class="fu">density.ppp</span>(ppp_obj, <span class="at">sigma =</span> bw, <span class="at">edge =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb27-24"><a href="#cb27-24" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb27-25"><a href="#cb27-25" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb27-26"><a href="#cb27-26" aria-hidden="true" tabindex="-1"></a>    r <span class="ot">&lt;-</span> <span class="fu">raster</span>(kde)</span>
+<span id="cb27-27"><a href="#cb27-27" aria-hidden="true" tabindex="-1"></a>    r_masked <span class="ot">&lt;-</span> <span class="fu">mask</span>(r, <span class="fu">as</span>(adm0, <span class="st">"Spatial"</span>))</span>
+<span id="cb27-28"><a href="#cb27-28" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(r_masked)</span>
+<span id="cb27-29"><a href="#cb27-29" aria-hidden="true" tabindex="-1"></a>  }, <span class="at">error =</span> <span class="cf">function</span>(e) {</span>
+<span id="cb27-30"><a href="#cb27-30" aria-hidden="true" tabindex="-1"></a>    <span class="fu">warning</span>(<span class="fu">paste</span>(<span class="st">"Error in quarter"</span>, quarter, <span class="st">":"</span>, e<span class="sc">$</span>message))</span>
+<span id="cb27-31"><a href="#cb27-31" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(<span class="cn">NULL</span>)</span>
+<span id="cb27-32"><a href="#cb27-32" aria-hidden="true" tabindex="-1"></a>  })</span>
+<span id="cb27-33"><a href="#cb27-33" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>quarters <span class="ot">&lt;-</span> <span class="fu">unique</span>(acled_sf<span class="sc">$</span>quarter) <span class="sc">%&gt;%</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sort</span>()</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>quarters</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] 2021-Q1 2021-Q2 2021-Q3 2021-Q4 2022-Q1 2022-Q2 2022-Q3 2022-Q4 2023-Q1
+[10] 2023-Q2 2023-Q3 2023-Q4 2024-Q1 2024-Q2
+14 Levels: 2021-Q1 2021-Q2 2021-Q3 2021-Q4 2022-Q1 2022-Q2 2022-Q3 ... 2024-Q2</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>create_kde_layers <span class="ot">&lt;-</span> <span class="cf">function</span>(data, quarters, <span class="at">adaptive =</span> <span class="cn">FALSE</span>) {</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>  kde_layers <span class="ot">&lt;-</span> <span class="fu">lapply</span>(quarters, <span class="cf">function</span>(q) {</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">tryCatch</span>({</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>      <span class="fu">kde_quarterly</span>(data, q, <span class="at">adaptive =</span> adaptive)</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>    }, <span class="at">error =</span> <span class="cf">function</span>(e) {</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>      <span class="fu">warning</span>(<span class="fu">paste</span>(<span class="st">"Error in quarter"</span>, q, <span class="st">":"</span>, e<span class="sc">$</span>message))</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>      <span class="fu">return</span>(<span class="cn">NULL</span>)</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>    })</span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>  })</span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>  kde_layers <span class="ot">&lt;-</span> kde_layers[<span class="sc">!</span><span class="fu">sapply</span>(kde_layers, is.null)]</span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>(kde_layers) <span class="ot">&lt;-</span> quarters[<span class="sc">!</span><span class="fu">sapply</span>(kde_layers, is.null)]</span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(kde_layers)</span>
+<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>kde_layers_fixed <span class="ot">&lt;-</span> <span class="fu">create_kde_layers</span>(acled_sf, quarters)</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>kde_layers_adaptive <span class="ot">&lt;-</span> <span class="fu">create_kde_layers</span>(acled_sf, quarters, <span class="at">adaptive =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>get_density_range <span class="ot">&lt;-</span> <span class="cf">function</span>(kde_layers) {</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>  min_density <span class="ot">&lt;-</span> <span class="fu">min</span>(<span class="fu">sapply</span>(kde_layers, <span class="cf">function</span>(layer) <span class="fu">min</span>(<span class="fu">values</span>(layer), <span class="at">na.rm =</span> <span class="cn">TRUE</span>)))</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>  max_density <span class="ot">&lt;-</span> <span class="fu">max</span>(<span class="fu">sapply</span>(kde_layers, <span class="cf">function</span>(layer) <span class="fu">max</span>(<span class="fu">values</span>(layer), <span class="at">na.rm =</span> <span class="cn">TRUE</span>)))</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(<span class="fu">c</span>(min_density, max_density))</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>density_range_fixed <span class="ot">&lt;-</span> <span class="fu">get_density_range</span>(kde_layers_fixed)</span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>density_range_adaptive <span class="ot">&lt;-</span> <span class="fu">get_density_range</span>(kde_layers_adaptive)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>plot_kde_layer <span class="ot">&lt;-</span> <span class="cf">function</span>(kde_layer, quarter, admin_boundary, density_range, <span class="at">adaptive =</span> <span class="cn">FALSE</span>) {</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">is.null</span>(kde_layer)) {</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(<span class="fu">ggplot</span>() <span class="sc">+</span> <span class="fu">theme_void</span>() <span class="sc">+</span> <span class="fu">ggtitle</span>(<span class="fu">paste</span>(<span class="st">"No data for"</span>, quarter)))</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>  kde_df <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(kde_layer, <span class="at">xy =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rename</span>(<span class="at">density =</span> layer)</span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_raster</span>(<span class="at">data =</span> kde_df, <span class="fu">aes</span>(<span class="at">x =</span> x, <span class="at">y =</span> y, <span class="at">fill =</span> density)) <span class="sc">+</span></span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_sf</span>(<span class="at">data =</span> admin_boundary, <span class="at">fill =</span> <span class="cn">NA</span>, <span class="at">color =</span> <span class="st">"white"</span>, <span class="at">size =</span> <span class="fl">0.2</span>) <span class="sc">+</span></span>
+<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_fill_viridis_c</span>(<span class="at">option =</span> <span class="st">"inferno"</span>, </span>
+<span id="cb32-13"><a href="#cb32-13" aria-hidden="true" tabindex="-1"></a>                         <span class="at">limits =</span> density_range,</span>
+<span id="cb32-14"><a href="#cb32-14" aria-hidden="true" tabindex="-1"></a>                         <span class="at">oob =</span> scales<span class="sc">::</span>squish,</span>
+<span id="cb32-15"><a href="#cb32-15" aria-hidden="true" tabindex="-1"></a>                         <span class="at">name =</span> <span class="st">"Conflict</span><span class="sc">\n</span><span class="st">Density"</span>) <span class="sc">+</span></span>
+<span id="cb32-16"><a href="#cb32-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">title =</span> <span class="fu">paste</span>(<span class="fu">ifelse</span>(adaptive, <span class="st">"Adaptive"</span>, <span class="st">"Fixed"</span>), <span class="st">"Bandwidth KDE -"</span>, quarter),</span>
+<span id="cb32-17"><a href="#cb32-17" aria-hidden="true" tabindex="-1"></a>         <span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb32-18"><a href="#cb32-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb32-19"><a href="#cb32-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">size =</span> <span class="dv">10</span>, <span class="at">face =</span> <span class="st">"bold"</span>),</span>
+<span id="cb32-20"><a href="#cb32-20" aria-hidden="true" tabindex="-1"></a>          <span class="at">legend.position =</span> <span class="st">"right"</span>,</span>
+<span id="cb32-21"><a href="#cb32-21" aria-hidden="true" tabindex="-1"></a>          <span class="at">axis.text =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb32-22"><a href="#cb32-22" aria-hidden="true" tabindex="-1"></a>          <span class="at">axis.ticks =</span> <span class="fu">element_blank</span>()) <span class="sc">+</span></span>
+<span id="cb32-23"><a href="#cb32-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">coord_sf</span>()</span>
+<span id="cb32-24"><a href="#cb32-24" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb32-25"><a href="#cb32-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-26"><a href="#cb32-26" aria-hidden="true" tabindex="-1"></a>create_kde_plots <span class="ot">&lt;-</span> <span class="cf">function</span>(kde_layers, density_range, <span class="at">adaptive =</span> <span class="cn">FALSE</span>) {</span>
+<span id="cb32-27"><a href="#cb32-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">lapply</span>(<span class="fu">seq_along</span>(kde_layers), <span class="cf">function</span>(i) {</span>
+<span id="cb32-28"><a href="#cb32-28" aria-hidden="true" tabindex="-1"></a>    <span class="fu">plot_kde_layer</span>(kde_layers[[i]], <span class="fu">names</span>(kde_layers)[i], adm0, density_range, adaptive)</span>
+<span id="cb32-29"><a href="#cb32-29" aria-hidden="true" tabindex="-1"></a>  })</span>
+<span id="cb32-30"><a href="#cb32-30" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb32-31"><a href="#cb32-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-32"><a href="#cb32-32" aria-hidden="true" tabindex="-1"></a>kde_plots_fixed <span class="ot">&lt;-</span> <span class="fu">create_kde_plots</span>(kde_layers_fixed, density_range_fixed)</span>
+<span id="cb32-33"><a href="#cb32-33" aria-hidden="true" tabindex="-1"></a>kde_plots_adaptive <span class="ot">&lt;-</span> <span class="fu">create_kde_plots</span>(kde_layers_adaptive, density_range_adaptive, <span class="at">adaptive =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb32-34"><a href="#cb32-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-35"><a href="#cb32-35" aria-hidden="true" tabindex="-1"></a><span class="co"># Combine fixed and adaptive plots</span></span>
+<span id="cb32-36"><a href="#cb32-36" aria-hidden="true" tabindex="-1"></a>combined_plots <span class="ot">&lt;-</span> <span class="fu">map2</span>(kde_plots_fixed, kde_plots_adaptive, <span class="sc">~</span> .x <span class="sc">+</span> .y <span class="sc">+</span> <span class="fu">plot_layout</span>(<span class="at">ncol =</span> <span class="dv">2</span>))</span>
+<span id="cb32-37"><a href="#cb32-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-38"><a href="#cb32-38" aria-hidden="true" tabindex="-1"></a><span class="co"># Display the combined plots</span></span>
+<span id="cb32-39"><a href="#cb32-39" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (plot <span class="cf">in</span> combined_plots) {</span>
+<span id="cb32-40"><a href="#cb32-40" aria-hidden="true" tabindex="-1"></a>  <span class="fu">print</span>(plot)</span>
+<span id="cb32-41"><a href="#cb32-41" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="THE01_files/figure-html/unnamed-chunk-20-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="THE01_files/figure-html/unnamed-chunk-20-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="THE01_files/figure-html/unnamed-chunk-20-3.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="THE01_files/figure-html/unnamed-chunk-20-4.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="THE01_files/figure-html/unnamed-chunk-20-5.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="THE01_files/figure-html/unnamed-chunk-20-6.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="THE01_files/figure-html/unnamed-chunk-20-7.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="THE01_files/figure-html/unnamed-chunk-20-8.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="THE01_files/figure-html/unnamed-chunk-20-9.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="THE01_files/figure-html/unnamed-chunk-20-10.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="THE01_files/figure-html/unnamed-chunk-20-11.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="THE01_files/figure-html/unnamed-chunk-20-12.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="THE01_files/figure-html/unnamed-chunk-20-13.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="THE01_files/figure-html/unnamed-chunk-20-14.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
 </section>
 <section id="second-order-spatial-temporal-patterns-analysis-focused-exploration-of-conflict-dynamics" class="level2">
 <h2 class="anchored" data-anchor-id="second-order-spatial-temporal-patterns-analysis-focused-exploration-of-conflict-dynamics">6.0 Second Order Spatial-Temporal Patterns Analysis: Focused Exploration of Conflict Dynamics</h2>

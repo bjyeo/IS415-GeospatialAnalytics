@@ -24,7 +24,7 @@ Relevant [Geospatial data](http://geonode.themimu.info/layers/?limit=100&offset=
 ### 3.1 Loading Packages
 
 ```{r}
-pacman::p_load(sf, tidyverse, tmap, maptools, raster, spatstat, sp, sparr, leaflet, OpenStreetMap, stars, RColorBrewer, knitr, igraph, ggnetwork, viridis, ggrepel)
+pacman::p_load(sf, tidyverse, tmap, maptools, raster, spatstat, sp, sparr, leaflet, OpenStreetMap, stars, RColorBrewer, knitr, igraph, viridis, ggrepel, patchwork, gridExtra)
 ```
 
 ### 3.2 Loading Data
