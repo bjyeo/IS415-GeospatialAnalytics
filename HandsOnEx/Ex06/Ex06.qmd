@@ -13,7 +13,7 @@ execute:
 
 In this exercise, we explore ways to compute Global Measures of Spatial Autocorrelation (GMSA):
 
-* Compute GSA statistics using appropraite functions in the **spdep** functions
+* Compute GMSA statistics using appropraite functions in the **spdep** functions
   * Plotting Moran scatterplot and Moran's I correlogram
   * Compute Moran's I and Geary's C
 * Provide statistically correct interpretations of GSA statistics
@@ -105,7 +105,7 @@ The distribution of connections gives us an idea of Hunan's spatial structure. T
 When creating our row-standardized weights matrix, this step is crucial for spatial analysis. Style **"W"** assigns equal weights to neighbors, summing to 1 for each region. Setting `zero.policy = TRUE` handles regions with no neighbors, preventing errors in subsequent analyses.
 :::
 
-## GSA: Moran's I
+## GMSA: Moran's I
 
 Moran's I statistics can be performed using the `moran.test` function in the **spdep** package. This function computes the Moran's I statistic and its associated p-value.
 
@@ -216,7 +216,7 @@ ggplot(df, aes(x = moran_i)) +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-## GSA: Geary's C
+## GMSA: Geary's C
 
 ::: {.callout-tip title="Geary's C Interpretation"}
 Geary's C, developed by Robert J. Geary, is another measure of spatial autocorrelation that ranges from 0 to 2. A value close to 0 indicates positive spatial autocorrelation, while a value close to 2 indicates negative spatial autocorrelation. A value of 1 indicates spatial randomness.
@@ -429,7 +429,6 @@ printCoefmat(data.frame(
 
 ### Visualizing Local Moran's I
 
-
 ```{r}
 hunan.localMI <- cbind(hunan,localMI) %>%
   rename(Pr.Ii = Pr.z....E.Ii..)
@@ -559,6 +558,13 @@ tmap_arrange(localMI.map, pvalue.map, asp=1, ncol=2)
 
 Question: What spatial patterns do you observe in the LISA cluster map?
 
+**Answer:**
+From the LISA cluster map, we can observe the following spatial patterns:
+
+* **High-High Clusters:** Regions with high GDPPC values surrounded by other high GDPPC regions are represented by the red areas. These high-high clusters indicate spatial autocorrelation of high GDPPC values.
+* **Low-Low Clusters:** Regions with low GDPPC values surrounded by other low GDPPC regions are represented by the blue areas. These low-low clusters indicate spatial autocorrelation of low GDPPC values.
+* **Analysis:** The LISA cluster map reveals the spatial clusters of high and low GDPPC values in Hunan province. The clusters are concentrated in specific regions, indicating spatial autocorrelation of GDPPC values.
+
 ## Hot Spot and Cold Spot Area Analysis
 
 ### Getis and Ord's G-Statistics
@@ -623,6 +629,10 @@ tmap_arrange(gdppc, Gimap, asp=1, ncol=2)
 
 Question: What spatial patterns do you observe in the Gi statistics map using fixed distance weights?
 
+**Answer:**
+
+There seems to be a clear spatial pattern in the Gi statistics map using fixed distance weights. The map highlights regions with high and low GDPPC values based on the Gi statistics. The red areas represent hotspots of high GDPPC values, while the blue areas represent cold spots of low GDPPC values. The map shows spatial clustering of similar GDPPC values, indicating the presence of hotspots and cold spots in Hunan province.
+
 ### Gi Statistics using Adaptive Distance
 
 ```{r}
@@ -683,7 +693,3 @@ Here are the key findings:
   * The Getis-Ord's Gi statistics identified hotspots and cold spots of GDPPC values using fixed and adaptive distance weights.
   
 By combining GMSA and LMSA, we were able to identify spatial patterns and clusters of GDPPC values in Hunan province. These spatial statistical methods provide valuable insights into the geographic distribution of regional development indicators and help policymakers target interventions more effectively.
-
-
-
-

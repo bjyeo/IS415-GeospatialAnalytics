@@ -24,7 +24,7 @@ Relevant [Geospatial data](http://geonode.themimu.info/layers/?limit=100&offset=
 ### 3.1 Loading Packages
 
 ```{r}
-pacman::p_load(sf, tidyverse, tmap, maptools, raster, spatstat, sp, sparr, leaflet, OpenStreetMap, stars, RColorBrewer, knitr, igraph, viridis, ggrepel, patchwork, gridExtra)
+pacman::p_load(sf, tidyverse, tmap, maptools, raster, spatstat, sp, sparr, leaflet, OpenStreetMap, stars, RColorBrewer, knitr, igraph, viridis, patchwork, gridExtra, ggrepel)
 ```
 
 ### 3.2 Loading Data
@@ -49,14 +49,10 @@ head(acled_sf, n=10)
 ```
 
 ```{r}
-adm0 <- st_read(dsn = "data/adms", layer = "mmr_polbnda_adm0_250k_mimu_1") |>
-  st_transform(crs = 4326)
-adm1 <- st_read(dsn = "data/adms", layer = "mmr_polbnda_adm1_250k_mimu_1") |>
-  st_transform(crs = 4326)
-adm2 <- st_read(dsn = "data/adms", layer = "mmr_polbnda_adm2_250k_mimu") |>
-  st_transform(crs = 4326)
-adm3 <- st_read(dsn = "data/adms", layer = "mmr_polbnda_adm3_250k_mimu_1") |>
-  st_transform(crs = 4326)
+adm0 <- st_read(dsn = "data/adms", layer = "mmr_polbnda_adm0_250k_mimu_1")
+adm1 <- st_read(dsn = "data/adms", layer = "mmr_polbnda_adm1_250k_mimu_1")
+adm2 <- st_read(dsn = "data/adms", layer = "mmr_polbnda_adm2_250k_mimu")
+adm3 <- st_read(dsn = "data/adms", layer = "mmr_polbnda_adm3_250k_mimu_1")
 ```
 
 ```{r}
@@ -355,7 +351,7 @@ animated_heatmap <- ggplot() +
                   geom = "polygon", 
                   alpha = 0.5) +
     geom_sf(data = adm1, fill = NA, color = "gray") +
-  viridis::scale_fill_viridis() +
+  scale_fill_viridis() +
   theme_minimal() +
   labs(title = "Heatmap of Conflict Events in Myanmar",
        subtitle = "Quarter: {current_frame}",
@@ -408,7 +404,7 @@ top_10_regions <- acled_sf %>%
 top_regions_plot <- ggplot(top_10_regions, aes(x = reorder(admin1, n), y = n, fill = n)) +
   geom_bar(stat = "identity") +
   coord_flip() +
-  viridis::scale_fill_viridis(option = "D", direction = -1) +
+  scale_fill_viridis(option = "D", direction = -1) +
   labs(title = "Top 10 Administrative Regions with Most Conflicts",
        x = "Administrative Region",
        y = "Number of Conflict Events") +
@@ -432,7 +428,7 @@ events_fatalities <- acled_sf %>%
 
 ggplot(events_fatalities, aes(x = total_events, y = total_fatalities)) +
   geom_point(aes(size = total_events, color = total_fatalities), alpha = 0.7) +
-  ggrepel::geom_text_repel(aes(label = admin1), size = 3, max.overlaps = Inf) +
+  geom_text_repel(aes(label = admin1), size = 3, max.overlaps = Inf) +
   scale_size_continuous(range = c(2, 10)) +
   scale_color_viridis_c() +
   scale_x_log10(labels = scales::comma) +
@@ -472,34 +468,37 @@ Key Observations:
 
 ## 5.0 First Order Spatial-Temporal Patterns Analysis: A Closer Look at the Myanmar Conflict Landscape
 
-### 5.1 Kernel Density Estimation
+### 5.1 Quarterly Kernel Density Estimation
+
+**Methodology**
+
+* Temporal Trends: Quarterly KDE maps will be generated to visualize the spatial distribution of conflict events over time.
+* Duplicate Coordinates: There are duplicates in the Myanmar conflict data. KDE requires unique points to estimate the density. We will use the `spatstat` package to handle this issue.
+
+**Implementation**
+
+The `kde_quarterly` function generates KDE layer for each quarter, allowing us to observe how the spatial intensity of conflicts changes over time.
 
 ```{r}
-kde_quarterly <- function(data, quarter, bw = NULL, adaptive = FALSE) {
+kde_quarterly <- function(data, quarter, bw = NULL) {
   data_quarter <- data %>%
     filter(quarter == !!quarter)
   
   window <- as.owin(st_bbox(adm0))
   coords <- st_coordinates(data_quarter)
   
-  # Remove exact duplicates before creating ppp object
   unique_coords <- unique(coords)
   ppp_obj <- ppp(unique_coords[,1], unique_coords[,2], window = window)
   
-  ppp_obj <- rjitter(ppp_obj, retry = TRUE, nsim = 1, drop = TRUE, max = 0.001)
+  ppp_obj <- rjitter(ppp_obj, retry = TRUE, nsim = 1, drop = TRUE)
   ppp_obj <- unique.ppp(ppp_obj)
   
   if (is.null(bw)) {
-    bw <- bw.scott(ppp_obj)
+    bw <- bw.diggle(ppp_obj)
   }
   
   tryCatch({
-    if (adaptive) {
-      kde <- adaptive.density(ppp_obj, bw = bw, edge = TRUE)
-    } else {
-      kde <- density.ppp(ppp_obj, sigma = bw, edge = TRUE)
-    }
-    
+    kde <- density.ppp(ppp_obj, sigma = bw.diggle, edge = TRUE)
     r <- raster(kde)
     r_masked <- mask(r, as(adm0, "Spatial"))
     return(r_masked)
@@ -515,12 +514,13 @@ quarters <- unique(acled_sf$quarter) %>%
   sort()
 quarters
 ```
+By applying th KDE function across all quarters, we create a comprehensive temporal view of the conflict's spatial patterns 
 
 ```{r}
-create_kde_layers <- function(data, quarters, adaptive = FALSE) {
+create_kde_layers <- function(data, quarters) {
   kde_layers <- lapply(quarters, function(q) {
     tryCatch({
-      kde_quarterly(data, q, adaptive = adaptive)
+      kde_quarterly(data, q)
     }, error = function(e) {
       warning(paste("Error in quarter", q, ":", e$message))
       return(NULL)
@@ -533,10 +533,10 @@ create_kde_layers <- function(data, quarters, adaptive = FALSE) {
 }
 ```
 
+We also ensure to establish a consistent density range across all quarters to enable fair comparison between time periods. This identifies true changes in conflict intensity rather than artifacts of varying scales.
 
 ```{r}
-kde_layers_fixed <- create_kde_layers(acled_sf, quarters)
-kde_layers_adaptive <- create_kde_layers(acled_sf, quarters, adaptive = TRUE)
+kde_layers <- create_kde_layers(acled_sf, quarters)
 
 get_density_range <- function(kde_layers) {
   min_density <- min(sapply(kde_layers, function(layer) min(values(layer), na.rm = TRUE)))
@@ -544,12 +544,13 @@ get_density_range <- function(kde_layers) {
   return(c(min_density, max_density))
 }
 
-density_range_fixed <- get_density_range(kde_layers_fixed)
-density_range_adaptive <- get_density_range(kde_layers_adaptive)
+density_range <- get_density_range(kde_layers)
 ```
 
+The KDE plots are grouped by year, with the intention of allowing for easier temporal comparison and identification of trends.
+
 ```{r}
-plot_kde_layer <- function(kde_layer, quarter, admin_boundary, density_range, adaptive = FALSE) {
+plot_kde_layer <- function(kde_layer, quarter, admin_boundary, density_range) {
   if (is.null(kde_layer)) {
     return(ggplot() + theme_void() + ggtitle(paste("No data for", quarter)))
   }
@@ -559,12 +560,12 @@ plot_kde_layer <- function(kde_layer, quarter, admin_boundary, density_range, ad
   
   ggplot() +
     geom_raster(data = kde_df, aes(x = x, y = y, fill = density)) +
-    geom_sf(data = admin_boundary, fill = NA, color = "white", size = 0.2) +
-    scale_fill_viridis_c(option = "inferno", 
+    geom_sf(data = admin_boundary, fill = NA, color = "black", size = 0.2) +
+    scale_fill_viridis_c(option = "plasma",
                          limits = density_range,
                          oob = scales::squish,
                          name = "Conflict\nDensity") +
-    labs(title = paste(ifelse(adaptive, "Adaptive", "Fixed"), "Bandwidth KDE -", quarter),
+    labs(title = paste("KDE:", quarter),
          x = NULL, y = NULL) +
     theme_minimal() +
     theme(plot.title = element_text(size = 10, face = "bold"),
@@ -574,25 +575,169 @@ plot_kde_layer <- function(kde_layer, quarter, admin_boundary, density_range, ad
     coord_sf()
 }
 
-create_kde_plots <- function(kde_layers, density_range, adaptive = FALSE) {
+create_kde_plots <- function(kde_layers, density_range) {
   lapply(seq_along(kde_layers), function(i) {
-    plot_kde_layer(kde_layers[[i]], names(kde_layers)[i], adm0, density_range, adaptive)
+    plot_kde_layer(kde_layers[[i]], names(kde_layers)[i], adm0, density_range)
   })
 }
+kde_plots <- create_kde_plots(kde_layers, density_range)
 
-kde_plots_fixed <- create_kde_plots(kde_layers_fixed, density_range_fixed)
-kde_plots_adaptive <- create_kde_plots(kde_layers_adaptive, density_range_adaptive, adaptive = TRUE)
-
-# Combine fixed and adaptive plots
-combined_plots <- map2(kde_plots_fixed, kde_plots_adaptive, ~ .x + .y + plot_layout(ncol = 2))
-
-# Display the combined plots
-for (plot in combined_plots) {
-  print(plot)
+for (i in seq(1, length(kde_plots), by = 4)) {
+  end <- min(i + 3, length(kde_plots))
+  plots_to_combine <- kde_plots[i:end]
+  combined_plot <- wrap_plots(plots_to_combine, ncol = 2)
+  print(combined_plot)
 }
 ```
 
+**Key Observations**
+
+1. Temporal Evolution: There's a noticeable increase in conflict density across the country from 2021 Q2 to 2022 Q4, followed by a noticeable decline.
+2. Spatial Concentration:
+  * The Central and Northern regions consistently show higher conflict density across all quarterly snapshots, aligning with our earlier identification of hotspots in Sagaing, Magway, Mandalay and Shan
+  * The Southern regions, including Yangon, shows less intense conflict density
+  
+## 5.2 Quarterly Spatio-Temporal KDE
+
+```{r}
+# Define the UTM projection (UTM zone 47N)
+utm_crs <- st_crs(32647)
+
+# Prepare the study area window
+prepare_study_area <- function(adm0) {
+  adm0 %>%
+    st_transform(utm_crs) %>%
+    st_union() %>%
+    st_zm(drop = TRUE, what = "ZM") %>%
+    as.owin()
+}
+
+adm0_window <- prepare_study_area(adm0)
+
+# Define the UTM projection (UTM zone 47N)
+utm_crs <- st_crs(32647)
+
+# Create a new projected sf object
+acled_sf_projected <- st_transform(acled_sf, utm_crs)
+
+# Calculate quarters since the start of 2021
+calculate_quarters <- function(date) {
+  (year(date) - 2021) * 4 + quarter(date)
+}
+
+# Create a new sf object with quarter information
+acled_quarter <- st_sf(
+  QuarterNumeric = calculate_quarters(acled_sf_projected$event_date),
+  geometry = st_geometry(acled_sf_projected)
+)
+
+# Convert to ppp object
+acled_quarter_ppp <- as.ppp(acled_quarter)
+acled_quarter_ppp <- rjitter(acled_quarter_ppp, retry = TRUE, nsim = 1, drop = TRUE)
+acled_quarter_ppp <- unique.ppp(acled_quarter_ppp)
+```
+
+```{r}
+acled_owin <- acled_quarter_ppp[adm0_window]
+summary_output <- summary(acled_owin)
+print(summary_output)
+```
+
+```{r}
+st_kde <- spattemp.density(acled_owin)
+summary(st_kde)
+```
+
+```{r}
+# Function to plot a single STKDE layer
+plot_stkde_layer <- function(st_kde, quarter, year, adm0, density_range) {
+  quarter_data <- as.data.frame(st_kde$z.cond[[quarter]]$v)
+  colnames(quarter_data) <- st_kde$z.cond[[quarter]]$xcol
+  quarter_data$y <- st_kde$z.cond[[quarter]]$yrow
+  
+  quarter_data_long <- tidyr::pivot_longer(quarter_data, 
+                                           cols = -y, 
+                                           names_to = "x", 
+                                           values_to = "density")
+  quarter_data_long$x <- as.numeric(quarter_data_long$x)
+  quarter_data_long <- st_as_sf(quarter_data_long, coords = c("x", "y"), crs = st_crs(adm0))
+  
+  ggplot() +
+    geom_sf(data = quarter_data_long, aes(fill = density, color = density), size = 0.1, fill = "gray") +
+    geom_sf(data = adm0, fill = "black", color = "black", size = 0.5) +
+    scale_fill_viridis_c(option = "magma",
+                         trans = "log10",
+                         labels = scales::scientific,
+                         na.value = "transparent",
+                         limits = density_range) +
+    scale_color_viridis_c(option = "magma",
+                         trans = "log10",
+                         labels = scales::scientific,
+                         na.value = "transparent",
+                         limits = density_range) +
+    coord_sf() +
+    theme_minimal() +
+    labs(title = paste0("STKDE: ", year, "-Q", (quarter-1) %% 4 + 1),
+         x = NULL, y = NULL) +
+    theme(legend.position = "right",
+          plot.title = element_text(size = 10, face = "bold"),
+          axis.text = element_blank(),
+          axis.ticks = element_blank())
+}
+
+# Function to create all STKDE plots
+create_stkde_plots <- function(st_kde, adm0, density_range) {
+  plots <- list()
+  for (i in 1:length(st_kde$z.cond)) {
+    year <- 2021 + (i-1) %/% 4
+    quarter <- (i-1) %% 4 + 1
+    plots[[i]] <- plot_stkde_layer(st_kde, i, year, adm0, density_range)
+  }
+  return(plots)
+}
+
+# Function to display STKDE plots in groups of 4
+display_stkde_plots <- function(stkde_plots) {
+  for (i in seq(1, length(stkde_plots), by = 4)) {
+    end <- min(i + 3, length(stkde_plots))
+    plots_to_combine <- stkde_plots[i:end]
+    combined_plot <- wrap_plots(plots_to_combine, ncol = 2)
+    print(combined_plot)
+  }
+}
+
+all_densities <- unlist(lapply(st_kde$z.cond, function(x) as.vector(x$v)))
+density_range <- range(quantile(all_densities[is.finite(all_densities)], probs = c(0.01, 0.99), na.rm = TRUE))
+stkde_plots <- create_stkde_plots(st_kde, adm0, density_range)
+display_stkde_plots(stkde_plots)
+```
+
+
+
 ## 6.0 Second Order Spatial-Temporal Patterns Analysis: Focused Exploration of Conflict Dynamics
+
+### 6.1 Region of Interest (ROI) Analysis
+
+```{r}
+regions <- c("Sagaing", "Magway", "Mandalay", "Shan", "Yangon")
+adm1 <- st_transform(adm1, st_crs(4326))
+roi <- adm1 %>%
+  filter(ST %in% regions)
+
+ggplot() +
+  geom_sf(data = adm1, fill = "grey", color = "black") +
+  geom_sf(data = roi, aes(fill = ST), size = 0.5, alpha = 0.6) +
+  theme_minimal()
+  labs(title = "Regions of Interest (ROI) in Myanmar",
+       fill = "Region") +
+  theme(legend.position = "bottom")
+```
+
+### 6.2 Central/Northern Region Hotspots
+
+#### 6.2.1 Sagaing
+
+
 
 ## 7.0 OpenStreetMap Integration: Geospatial Visualization of Conflict Events
 
