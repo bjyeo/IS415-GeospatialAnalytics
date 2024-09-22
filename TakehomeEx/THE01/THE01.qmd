@@ -9,6 +9,51 @@ execute:
   freeze: true
 ---
 
+This exercise aims to analyze the spatial and temporal patterns of conflict events in Myanmar from January 2021 to June 2024, using conflict data from the Armed Conflict Location & Event Data Project (ACLED). By employing geospatial analysis techniques, we seek to provide insights into the evolving nature of the conflict, its geographical distribution, and potential implications for conflict resolution and humanitarian efforts.
+
+## 1.0 Introduction
+
+Myanmar, formerly known as Burma, has been embroiled in a complex and multifaceted conflict since its independence in 1948. The current phase of the conflict, which this study focuses on, began with the military coup on February 1, 2021. This coup abruptly ended a decade of quasi-democratic rule and plunged the country into a new era of political instability and armed conflict.
+
+### 1.1 Timeline of Conflict
+
+The conflict in Myanmar is part of a long history of political instability and ethnic tensions. To understand the current situation, it's crucial to consider the **historical precedence**:
+
+* 1948: Myanmar gains independence from British rule.
+* 1962: General Ne Win leads a military coup, establishing a one-party state.
+* 1988: Nationwide pro-democracy protests (8888 Uprising) are violently suppressed by the military.
+* 1990: The National League for Democracy (NLD) wins a landslide victory in elections, but the military refuses to hand over power.
+* 2011: The military junta is officially dissolved, leading to a period of quasi-democratic rule.
+* 2015: The NLD wins a majority in the first openly contested election in 25 years.
+
+**Recent Events:**
+
+February 1, 2021: The Myanmar Armed Forces (Tatmadaw/junta) seizes power in a coup d'état, detaining State Counsellor Aung San Suu Kyi and other senior members of the ruling NLD party.
+
+February 2021 onwards: Nationwide protests erupt against military rule, known as the Civil Disobedience Movement (CDM).
+
+April 2021: The National Unity Government (NUG), a parallel government formed by ousted lawmakers and ethnic leaders, declares a "people's defensive war" against the military junta.
+
+2021-2024: Ongoing armed conflict between the military, ethnic armed organizations (EAOs), and newly formed People's Defence Forces (PDFs).
+
+### 1.2 Key Actors
+
+The conflict in Myanmar involves multiple actors with diverse interests:
+
+* **Tatmadaw (Myanmar Armed Forces**: The main actor representing the military junta.
+* **National Unity Government (NUG)**: The parallel government formed by ousted lawmakers and ethnic leaders.
+* **Ethnic Armed Organizations (EAOs)**: The EAOs are made of disjointed groups representing ethnic minorities, some of which have been in conflict with the central government for decades.
+* **People's Defence Forces (PDFs)**: A coalition of civilian resistance groups formed in response to the military coup.
+
+### 1.3 Regional Dynamics
+
+Myanmar's conflict landscape is complex and multifaceted, with regional dynamics playing a crucial role:
+
+* **Sagaing Region**: Traditional hotspot of resistance against the military junta, with intense fighting between the military and local PDFs.
+* **Rakhine State**: Historically a site of conflict involving the Arakan Army (EAO) and issues related to the Rohingya minority.
+* **Shan State**: Complex dynamics involving multiple EAOs and ongoing conflicts over territory and resources.
+* **Yangon Region**: The country's largest city and former capital, a focal point for urban resistance and protests.
+
 ## 2.0 Data Collection
 
 ### 2.1 Armed Conflict Data
@@ -24,7 +69,7 @@ Relevant [Geospatial data](http://geonode.themimu.info/layers/?limit=100&offset=
 ### 3.1 Loading Packages
 
 ```{r}
-pacman::p_load(sf, tidyverse, tmap, maptools, raster, spatstat, sp, sparr, leaflet, OpenStreetMap, stars, RColorBrewer, knitr, igraph, viridis, patchwork, gridExtra, ggrepel)
+pacman::p_load(sf, tidyverse, tmap, maptools, raster, spatstat, sp, sparr, OpenStreetMap, stars, RColorBrewer, knitr, igraph, viridis, patchwork, gridExtra, ggrepel, tmaptools, mapview)
 ```
 
 ### 3.2 Loading Data
@@ -35,35 +80,47 @@ Before proceeding with our analysis, we need to import two sets of data:
 2. **Administrative Boundary Data**: These shapefiles from MIMU contain the administrative boundaries of Myanmar at the state and region level.
 
 ```{r}
-acled_sf <- read_csv("data/geospatial/ACLED_Myanmar.csv") |>
-  st_as_sf(coords = c("longitude", "latitude"), crs = 4326) |>
-  mutate(event_date = dmy(event_date)) |>
+acled_sf <- read_csv("data/aspatial/ACLED_Myanmar.csv") %>%
+  st_as_sf(coords = c("longitude", "latitude"), crs = 4326) %>%
+  mutate(event_date = dmy(event_date)) %>%
   mutate(
     quarter = paste0(year, "-Q", quarter(event_date, with_year = FALSE)),
     quarter = factor(quarter)
-  ) |>
+  ) %>%
   relocate(quarter, .after = year)
 ```
+
+**Exploring the Armed Conflict Data**
+
 ```{r}
 head(acled_sf, n=10)
 ```
 
+A quick glance at the data reveals that there are a few columns to look out for:
+
+| field  | class  | representation  |
+|--------|--------|--------|
+| event_date  | date  | When the conflict event occurred  |           
+| year  | dbl  | Year of conflict event  |
+| quarter  | fctr  | Which quarter the conflict event occured in the year  |
+| event_type  | chr  | Type of conflict  |
+| actor1  | chr  | Main Actor 1  |
+| actor2  | chr  | Main Actor 2  |
+| admin1  | chr  | Administrative Region  |
+| admin2  | chr  | District  |
+| admin3  | chr  | Township  |
+| fatalities  | dbl  | Number of fatalities in the conflict event  |
+
+: acled_sf {tbl-colwidths="[25,25,50]"}
+
 ```{r}
 adm0 <- st_read(dsn = "data/adms", layer = "mmr_polbnda_adm0_250k_mimu_1")
 adm1 <- st_read(dsn = "data/adms", layer = "mmr_polbnda_adm1_250k_mimu_1")
-adm2 <- st_read(dsn = "data/adms", layer = "mmr_polbnda_adm2_250k_mimu")
-adm3 <- st_read(dsn = "data/adms", layer = "mmr_polbnda_adm3_250k_mimu_1")
-```
-
-```{r}
-admin_boundaries <- list(adm0 = adm0, adm1 = adm1, adm2 = adm2, adm3 = adm3)
 ```
 
 ### 3.3 Visualization of Myanmar Administrative Divisions
 
 Before we conducting any analysis, we need to familiarize ourselves with the entire map of Myanmar. Myanmar is divided into several administrative divisions, including states, regions, districts, and townships. We will visualize these administrative divisions using the `tmap` package.
-
-**Bonus:** For the choice of color palette, we use the `RColorBrewer` package to generate a colorblind-friendly palette for accessibility. *Set2* is one of the better colorblind-friendly choices for categorical data.
 
 ```{r}
 tmap_mode("plot")
@@ -89,27 +146,6 @@ myanmar_map <- tm_shape(adm1) +
 # tmap_save(myanmar_map, filename = "myanmar_admin_divisions.png", width = 8, height = 10)
 myanmar_map
 ```
-
-### 3.4 Bonus: Geospatial Dashboard for Conflict Analysis
-
-**Premise:**
-
-The decision to create this interactive map stems from the need to provide a more dynamic and user-friendly way to explore the complex spatial and temporal patterns of conflict events in Myanmar. While static maps and charts offer valuable insights, an interactive dashboard allows for a more in-depth and customizable analysis of the data.
-
-Unfortunately, since this rendered document will be output in a static format, the interactive dashboard will not be displayed here. However, the code for the Shiny app is provided below for reference. Additionally, there will be screenshots of the dashboard below for visualization purposes.
-
-**Features:**
-
-1. Visualization of Spatial Patterns: The map displays the geographical distribution of conflict events across different administrative levels of Myanmar.
-2. Temporal Analysis: Date range slider enables exploration of how conflict patterns have changed over time.
-3. Event Type Distribution: The interactive pie chart provides a view of the relative frequency of different types of conflict events.
-4. Customization: Users can adjust parameters like administrative level and date range to focus on specific areas or time periods of interest.
-
-**Implementation:**
-
-* `shiny`: Used for creating web app framework, allowing reactive updates based on user inputs
-* `leaflet`: For interactive maps with dynamic layers and markers
-* `plotly`: Used for creating the interactive pie chart. Hovering over the chart provides detailed information about each event type.
 
 ## 4.0 Preliminary Exploratory Data Analysis: Understanding the Conflict Landscape
 
@@ -204,7 +240,7 @@ Key Observations:
 If it wasn't apparent that the Myanmar Armed Forces is the central antagonist in the conflict, a network analysis of the top actors will make it abundantly clear. We want to explicitly show their deep involvement in the conflict landscape.
 
 ```{r}
-#| cache: true
+#| eval: false
 
 actor_network <- acled_sf %>%
   dplyr::select(actor1, actor2) %>%
@@ -460,7 +496,7 @@ Key Observations:
 ### 4.4 Overall Analysis
 
 1. **Conflict Intensity and Distribution**: The conflict in Myanmar is not uniformly distributed, with clear hotspots in the Central and Northern regions.
-    * Hypothesis: The spatial distribution of conflict events is *not random*.
+    * Hypothesis Test: Test if the spatial distribution of conflict events is random.
 2. **Temporal Trends and Conflict Evolution**: While there's an overall declining trend in conflict events since the peak in 2021 - 2022, fatalities remain high, and recent fluctuations suggest ongoing volatality. This pattern indicates a potential shift in conflict dynamics rather than de-escalation.
     * Research Question: How has the nature of the conflict changed over time, and what factors are contributing to the sustained high fatality rates despite decreasing event frequency?
 3. **Central Role of Myanmar Armed Forces**: The miltary is overwhelmingly involved in conflict events. Their dominance suggests an asymmetric conflict where state forces are engaged against multiple, smaller opposition groups and civilian resistance.
@@ -514,7 +550,7 @@ quarters <- unique(acled_sf$quarter) %>%
   sort()
 quarters
 ```
-By applying th KDE function across all quarters, we create a comprehensive temporal view of the conflict's spatial patterns 
+By applying the KDE function across all quarters, we create a comprehensive temporal view of the conflict's spatial patterns 
 
 ```{r}
 create_kde_layers <- function(data, quarters) {
@@ -550,6 +586,7 @@ density_range <- get_density_range(kde_layers)
 The KDE plots are grouped by year, with the intention of allowing for easier temporal comparison and identification of trends.
 
 ```{r}
+#| cache: true
 plot_kde_layer <- function(kde_layer, quarter, admin_boundary, density_range) {
   if (is.null(kde_layer)) {
     return(ggplot() + theme_void() + ggtitle(paste("No data for", quarter)))
@@ -597,13 +634,17 @@ for (i in seq(1, length(kde_plots), by = 4)) {
   * The Central and Northern regions consistently show higher conflict density across all quarterly snapshots, aligning with our earlier identification of hotspots in Sagaing, Magway, Mandalay and Shan
   * The Southern regions, including Yangon, shows less intense conflict density
   
-## 5.2 Quarterly Spatio-Temporal KDE
+### 5.2 Quarterly Spatio-Temporal KDE
+
+**Data Preparation**
+
+* Prepare the study area as a spatial window
+* Calculate number of quarters since start of 2021 and create a new spatial dataframe with a numeric quarter column
+* Converts spatial data to a point pattern object, applying jittering to handle duplicate points
 
 ```{r}
-# Define the UTM projection (UTM zone 47N)
 utm_crs <- st_crs(32647)
 
-# Prepare the study area window
 prepare_study_area <- function(adm0) {
   adm0 %>%
     st_transform(utm_crs) %>%
@@ -611,45 +652,71 @@ prepare_study_area <- function(adm0) {
     st_zm(drop = TRUE, what = "ZM") %>%
     as.owin()
 }
-
 adm0_window <- prepare_study_area(adm0)
 
-# Define the UTM projection (UTM zone 47N)
-utm_crs <- st_crs(32647)
-
-# Create a new projected sf object
 acled_sf_projected <- st_transform(acled_sf, utm_crs)
 
-# Calculate quarters since the start of 2021
 calculate_quarters <- function(date) {
   (year(date) - 2021) * 4 + quarter(date)
 }
 
-# Create a new sf object with quarter information
 acled_quarter <- st_sf(
   QuarterNumeric = calculate_quarters(acled_sf_projected$event_date),
   geometry = st_geometry(acled_sf_projected)
 )
 
-# Convert to ppp object
 acled_quarter_ppp <- as.ppp(acled_quarter)
 acled_quarter_ppp <- rjitter(acled_quarter_ppp, retry = TRUE, nsim = 1, drop = TRUE)
 acled_quarter_ppp <- unique.ppp(acled_quarter_ppp)
 ```
 
-```{r}
-acled_owin <- acled_quarter_ppp[adm0_window]
-summary_output <- summary(acled_owin)
-print(summary_output)
-```
+**Summary**
 
 ```{r}
+#| cache: true
+acled_owin <- acled_quarter_ppp[adm0_window]
+summary_output <- summary(acled_owin)
+# print(summary_output)
+```
+
+Part of the summary output will be shown as follows:
+
+Marked planar point pattern:  51458 points
+Average intensity 7.683584e-08 points per square unit
+
+Coordinates are given to 16 decimal places
+
+marks are numeric, of type ‘double’
+Summary:
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+  1.000   4.000   7.000   7.087  11.000  14.000 
+
+Window: polygonal boundary
+563 separate polygons (3 holes)
+enclosing rectangle: [-210008.6, 724647.6] x [1072026.3, 3158467.1] units
+                     (934700 x 2086000 units)
+Window area = 6.69714e+11 square units
+Fraction of frame area: 0.343
+
+**Spatio-Temporal KDE Computation**
+
+To perform the spatio-temporal KDE analysis, we use `spattemp.density` from the `spatstat` package. This function estimates the spatio-temporal intensity of point patterns.
+
+```{r}
+#| cache: true
 st_kde <- spattemp.density(acled_owin)
 summary(st_kde)
 ```
+**Spatio-Temporal KDE Visualization**
+
+The code below handles:
+
+* Extracting and formatting STKDE quarterly results
+* Creating individual plots for each quarter
+* Combining and displaying plots in groups of four
 
 ```{r}
-# Function to plot a single STKDE layer
+#| cache: true
 plot_stkde_layer <- function(st_kde, quarter, year, adm0, density_range) {
   quarter_data <- as.data.frame(st_kde$z.cond[[quarter]]$v)
   colnames(quarter_data) <- st_kde$z.cond[[quarter]]$xcol
@@ -663,17 +730,15 @@ plot_stkde_layer <- function(st_kde, quarter, year, adm0, density_range) {
   quarter_data_long <- st_as_sf(quarter_data_long, coords = c("x", "y"), crs = st_crs(adm0))
   
   ggplot() +
-    geom_sf(data = quarter_data_long, aes(fill = density, color = density), size = 0.1, fill = "gray") +
-    geom_sf(data = adm0, fill = "black", color = "black", size = 0.5) +
-    scale_fill_viridis_c(option = "magma",
+    geom_sf(data = quarter_data_long, aes(fill = density, color = density), size = 0.1) +
+    geom_sf(data = adm0, fill = NA, color = "black", size = 0.5) +
+    scale_fill_viridis_c(option = "plasma",
                          trans = "log10",
                          labels = scales::scientific,
-                         na.value = "transparent",
                          limits = density_range) +
-    scale_color_viridis_c(option = "magma",
+    scale_color_viridis_c(option = "plasma",
                          trans = "log10",
                          labels = scales::scientific,
-                         na.value = "transparent",
                          limits = density_range) +
     coord_sf() +
     theme_minimal() +
@@ -685,7 +750,6 @@ plot_stkde_layer <- function(st_kde, quarter, year, adm0, density_range) {
           axis.ticks = element_blank())
 }
 
-# Function to create all STKDE plots
 create_stkde_plots <- function(st_kde, adm0, density_range) {
   plots <- list()
   for (i in 1:length(st_kde$z.cond)) {
@@ -696,7 +760,6 @@ create_stkde_plots <- function(st_kde, adm0, density_range) {
   return(plots)
 }
 
-# Function to display STKDE plots in groups of 4
 display_stkde_plots <- function(stkde_plots) {
   for (i in seq(1, length(stkde_plots), by = 4)) {
     end <- min(i + 3, length(stkde_plots))
@@ -712,40 +775,815 @@ stkde_plots <- create_stkde_plots(st_kde, adm0, density_range)
 display_stkde_plots(stkde_plots)
 ```
 
+::: {.callout-note}
 
+The density range of 0.01 and 0.99 quantiles was used to exclude extreme outliers and ensure a decently consistent scale across all plots.
 
-## 6.0 Second Order Spatial-Temporal Patterns Analysis: Focused Exploration of Conflict Dynamics
+:::
+
+Key Observations:
+
+1. Temporal Evolution:
+  * In 2021, the conflict appears relatively concentrated in the Central and Northern regions
+  * Around 2022-2023, there is an intensification and spread of conflict events across broader areas of the country
+  * By 2024, there seems to be a slight contraction in the intensity and spread of events, though still remaining at elevated levels compared to the early period.
+2. Spatial Patterns:
+  * Persistent Hotspots: Certain areas, particularly in the Central and Northern regions show consistently high-intensity conflicts through the study period.
+  * Expanding Conflict Zero: The conflict intensity is seen spreading to new areas, suggesting an expansion of the conflict's geographical scope.
+  * Regional Variations: The area around Yangon shows lower intensity throughout but with noticeable fluctuations.
+3. Geographical Features: The conflict appears to follow certain geographical patterns, possibly aligning with major urban centers, transport routes, or areas of strategic importance.
+
+To ascertain if the distribution of conflict events is random or clusterd, we will conduct second-order spatial patterns analysis.
+
+## 6.0 Second Order Spatial-Temporal Patterns Analysis: Focused Exploration of Conflict Hotspots
 
 ### 6.1 Region of Interest (ROI) Analysis
 
+The data we gathered from MIMU also includes `adm1`, which represents the states and regions of Myanmar. We can use this data to focus on specific regions of interest (ROIs) and analyze the conflict dynamics in more detail.
+
 ```{r}
-regions <- c("Sagaing", "Magway", "Mandalay", "Shan", "Yangon")
-adm1 <- st_transform(adm1, st_crs(4326))
-roi <- adm1 %>%
-  filter(ST %in% regions)
+adm1 <- st_read(dsn = "data/adms", layer = "mmr_polbnda_adm1_250k_mimu_1") %>%
+  st_transform(crs = 32647)
+```
+
+**Highlighting Conflict Hotspots**
+
+```{r}
+highlight_regions <- c("Sagaing", "Magway", "Mandalay", "Shan", "Yangon")
+adm1$highlight <- ifelse(adm1$ST %in% highlight_regions, adm1$ST, NA)
 
 ggplot() +
-  geom_sf(data = adm1, fill = "grey", color = "black") +
-  geom_sf(data = roi, aes(fill = ST), size = 0.5, alpha = 0.6) +
-  theme_minimal()
-  labs(title = "Regions of Interest (ROI) in Myanmar",
+  geom_sf(data = adm1, fill = "white", color = "black", size = 0.1) +
+  geom_sf(data = adm1, aes(fill = highlight), color = "black", size = 0.1) +
+  theme_minimal() +
+  labs(title = "Conflict Hotspots",
        fill = "Region") +
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom",
+        plot.title = element_text(hjust = 0.5, face = "bold"),
+        axis.text = element_blank(),
+        axis.title = element_blank())
 ```
+In our earlier analysis, we have identified hotspots in the Northern/Central and Southern regions. We will now focus on these regions to understand the conflict dynamics in more detail.
+
+**Second Order Point Pattern Analysis Methodology**
+
+1. G-Function: The G-function measures the spatial distribution of distances to the nearest neighbor for each point. It helps identify clustering or regularity at smaller scales.
+2. L-Function: The L-function measures the number of points within a given distance of any arbitrary point. It's useful for detecting patterns at multiple scales.
+3. Spatio-Temporal KDE: We want to know how the conflict intensity in these regions has evolved over time. 
 
 ### 6.2 Central/Northern Region Hotspots
 
+```{r}
+region_ppp <- function(data, admin_data, region_name) {
+  region <- admin_data %>% 
+    filter(ST == region_name)
+  
+  hotspot <- data %>% 
+    st_join(region) %>% 
+    filter(!is.na(ST)) %>%
+    st_jitter()
+  
+  window_region <- as.owin(st_bbox(region))
+  
+  conflict_region_ppp <- as.ppp(st_coordinates(hotspot), W = window_region)
+  
+  return(ppp_object = conflict_region_ppp)
+}
+```
+
 #### 6.2.1 Sagaing
 
+```{r}
+#| cache: true
+sagaing_ppp <- region_ppp(acled_sf_projected, adm1, "Sagaing")
+```
 
+**G-Function**
+
+```{r}
+#| cache: true
+sagaing_ppp_km <- rescale(sagaing_ppp, 1000, "km")
+G_sagaing <- Gest(sagaing_ppp_km, correction = "border")
+plot(G_sagaing, main = "G-Function for Conflict Events in Sagaing")
+```
+
+**Monte Carlo test with G-Function**
+
+```{r}
+#| cache: true
+G_sagaing.csr <- envelope(sagaing_ppp_km,
+                          Gest,
+                          nsim = 999)
+```
+
+```{r}
+#| cache: true
+plot(G_sagaing.csr, main = "Monte Carlo Test: G-Function for Conflict Events in Sagaing")
+```
+
+**L-Function**
+
+```{r}
+#| cache: true
+L_sagaing <- Lest(sagaing_ppp_km, correction = "Ripley")
+plot(L_sagaing, . -r ~ r, main = "L-Function for Conflict Events in Sagaing")
+```
+
+**Monte Carlo test with L-Function**
+
+```{r}
+#| cache: true
+L_sagaing.csr <- envelope(sagaing_ppp_km,
+                          fun = Lest,
+                          nsim = 99,
+                          rank = 1,
+                          glocal = TRUE)
+```
+
+```{r}
+#| cache: true
+plot(L_sagaing.csr, main = "Monte Carlo Test: L-Function for Conflict Events in Sagaing")
+```
+
+**Key Observations:**
+
+1. G-Function: The observed G(r) lies significantly above the theoretical line and outside the simulation envelopes for **small distances**. This suggests strong clustering of conflict events at short distances.
+2. L-function: The observed L(r) - r is consistently above zero and outside the simulation envelopes across all distances. This indicates significant clustering at multiple scales.
+
+Null Hypothesis $H~0$: The spatial distribution of conflict events in Sagaing is random.
+Alternative Hypothesis $H~1$: The spatial distribution of conflict events in Sagaing is not random.
+
+Given that both G and L functions show significant departure from the theoretical CSR line and lie outside the simulation envelopes, we **reject the null hypothesis**. The evidence strongly suggests that conflict events in Sagaing are **not randomly distributed** but exhibit significant clustering at various scales. 
+
+**Sagaing Spatio-Temporal KDE Analysis**
+
+<details>
+
+<summary>Show Code</summary>
+
+```{r}
+adm1_t <- st_transform(adm1, 32647)
+
+sagaing_area <- adm1_t |>
+  filter(ST == "Sagaing") |>
+  st_union()
+sagaing_owin <- as.owin(sagaing_area)
+sagaing_ppp <- acled_quarter_ppp[sagaing_owin]
+sagaing_ppp <- rescale(sagaing_ppp, 1000, "km")
+stkde_sagaing <- spattemp.density(sagaing_ppp)
+summary(stkde_sagaing)
+```
+
+```{r}
+library(animation)
+plot_stkde_animated <- function(stkde_object, region_name) {
+  total_quarters <- 14
+  
+  saveGIF({
+    for(i in 1:total_quarters) {
+      year <- 2021 + (i-1) %/% 4
+      quarter <- (i-1) %% 4 + 1
+      
+      plot(stkde_object, i,
+           override.par=FALSE,
+           fix.range=TRUE,
+           main=paste0("KDE of ", region_name, ": ", year, "-Q", quarter))
+    }
+  }, movie.name = paste0(region_name, "_KDE_animation.gif"), 
+     ani.width = 600, ani.height = 600, ani.res = 100, 
+     interval = 1, loop = 0)
+}
+```
+
+</details>
+
+![](Sagaing_KDE_animation.gif)
+
+**STKDE Observations:**
+
+1. Temporal Evolution: The intensity of conflicts appear to decrease over time, with the highest intensities observed in earlier quarters (2021-2022) and lower intensities in later quarters (2023-2024).
+2. Spatial Concentration: Regional conflict hotspots are consistently observed in the Southern and Central parts of Sagaing, **particularly concentrated around the borders**, with some fluctuation in intensity over time.
+
+During our EDA process, Sagaing stood out because of it's position as having the highest number of conflict events and highest fatalities. Later on, we will revisit Sagaing. 
+
+#### 6.2.2 Magway
+
+```{r}
+#| cache: true
+magway_ppp <- region_ppp(acled_sf_projected, adm1, "Magway")
+```
+
+**G-Function**
+
+```{r}
+#| cache: true
+magway_ppp_km <- rescale(magway_ppp, 1000, "km")
+G_magway <- Gest(magway_ppp_km, correction = "border")
+plot(G_magway, main = "G-Function for Conflict Events in Magway")
+```
+
+**Monte Carlo test with G-Function**
+
+```{r}
+#| cache: true
+G_magway.csr <- envelope(magway_ppp_km,
+                         Gest,
+                         nsim = 999)
+```
+
+```{r}
+#| cache: true
+plot(G_magway.csr, main = "Monte Carlo Test: G-Function for Conflict Events in Magway")
+```
+
+**L-Function**
+
+```{r}
+#| cache: true
+L_magway <- Lest(magway_ppp_km, correction = "Ripley")
+plot(L_magway, . -r ~ r, main = "L-Function for Conflict Events in Magway")
+```
+
+**Monte Carlo test with L-Function**
+
+```{r}
+#| cache: true
+L_magway.csr <- envelope(magway_ppp_km,
+                         fun = Lest,
+                         nsim = 99,
+                         rank = 1,
+                         glocal = TRUE)
+```
+
+```{r}
+#| cache: true
+plot(L_magway.csr, main = "Monte Carlo Test: L-Function for Conflict Events in Magway")
+```
+
+**Key Observations:**
+
+1. G-function: The observed G(r) lies above the theoretical line and outside the simulation envelopes for **small to medium distances**, indicating clustering at these scales.
+2. L-function: The observed L(r) - r is consistently above zero and outside the simulation envelopes across all distances, suggesting significant clustering at multiple scales.
+
+Null Hypothesis $H~0$: The spatial distribution of conflict events in Magway is random.
+Alternative Hypothesis $H~1$: The spatial distribution of conflict events in Magway is not random.
+
+Both G and L functions show significant departure from CSR, so we **reject the null hypothesis**. The conflict events in Magway exhibit clear **clustering patterns** at various scales.
+
+**Magway Spatio-Temporal KDE Analysis**
+
+<details>
+
+<summary>Show Code</summary>
+```{r}
+#| eval: false
+magway_area <- adm1_t |>
+  filter(ST == "Magway") |>
+  st_union()
+magway_owin <- as.owin(magway_area)
+magway_ppp <- acled_quarter_ppp[magway_owin]
+magway_ppp <- rescale(magway_ppp, 1000, "km")
+stkde_magway <- spattemp.density(magway_ppp)
+summary(stkde_magway)
+plot_stkde_animated(stkde_magway, "Magway")
+```
+</details>
+
+![](Magway_KDE_animation.gif)
+
+**STKDE Observations:**
+
+1. Temporal Evolution: There is an initial spike in conflict intensity around 2021-Q2 to 2022-Q1, followed by a general decline in intensity, however there seems to be a **resurgence of conflicts in 2024-Q2**.
+2. Spatial Distribution: The regional conflict hotspots seems to have shifted from the Central area (2021-Q1) towards the Northern areas.
+
+#### 6.2.3 Mandalay
+
+```{r}
+#| cache: true
+mandalay_ppp <- region_ppp(acled_sf_projected, adm1, "Mandalay")
+```
+
+**G-Function**
+
+```{r}
+#| cache: true
+mandalay_ppp_km <- rescale(mandalay_ppp, 1000, "km")
+G_mandalay <- Gest(mandalay_ppp_km, correction = "border")
+plot(G_mandalay, main = "G-Function for Conflict Events in Mandalay")
+```
+
+**Monte Carlo test with G-Function**
+
+```{r}
+#| cache: true
+G_mandalay.csr <- envelope(mandalay_ppp_km,
+                           Gest,
+                           nsim = 999)
+```
+
+**L-Function**
+
+```{r}
+L_mandalay <- Lest(mandalay_ppp_km, correction = "Ripley")
+plot(L_mandalay, . -r ~ r, main = "L-Function for Conflict Events in Mandalay")
+```
+
+**Monte Carlo test with L-Function**
+
+```{r}
+#| cache: true
+L_mandalay.csr <- envelope(mandalay_ppp_km,
+                           fun = Lest,
+                           nsim = 99,
+                           rank = 1,
+                           glocal = TRUE)
+```
+
+```{r}
+#| cache: true
+plot(L_mandalay.csr, main = "Monte Carlo Test: L-Function for Conflict Events in Mandalay")
+```
+
+**Key Observations:**
+
+1. G-function: The observed G(r) lies significantly above the theoretical line and outside the simulation envelopes for **small to medium distances**, indicating strong clustering at these scales.
+2. L-function: The observed L(r) - r is consistently above zero and outside the simulation envelopes across all distances, suggesting significant clustering at multiple scales.
+
+Null Hypothesis $H~0$: The spatial distribution of conflict events in Mandalay is random.
+Alternative Hypothesis $H~1$: The spatial distribution of conflict events in Mandalay is not random.
+
+Both G and L functions show significant departure from CSR, so we **reject the null hypothesis**. The conflict events in Mandalay show clear and **strong clustering patterns** at various scales.
+
+**Mandalay Spatio-Temporal KDE Analysis**
+
+<details>
+
+<summary>Show Code</summary>
+```{r}
+#| eval: false
+mandalay_area <- adm1_t |>
+  filter(ST == "Mandalay") |>
+  st_union()
+mandalay_owin <- as.owin(mandalay_area)
+mandalay_ppp <- acled_quarter_ppp[mandalay_owin]
+mandalay_ppp <- rescale(mandalay_ppp, 1000, "km")
+stkde_mandalay <- spattemp.density(mandalay_ppp)
+summary(stkde_mandalay)
+plot_stkde_animated(stkde_mandalay, "Mandalay")
+```
+</details>
+
+![](Mandalay_KDE_animation.gif)
+
+**STKDE Observations:**
+
+1. Temporal Evolution: The intensity of conflicts in Mandalay significantly decreases over time.
+2. Spatial Concentration: Conflict hotspots are primarily concentrated in the Central border along Mandalay.
+
+#### 6.2.4 Shan
+
+```{r}
+#| cache: true
+shan_ppp <- region_ppp(acled_sf_projected, adm1, "Shan")
+```
+
+```{r}
+#| cache: true
+shan_ppp_km <- rescale(shan_ppp, 1000, "km")
+G_shan <- Gest(shan_ppp_km, correction = "border")
+plot(G_shan, main = "G-Function for Conflict Events in Shan")
+```
+
+**Monte Carlo test with G-Function**
+
+```{r}
+#| cache: true
+G_shan.csr <- envelope(shan_ppp_km,
+                       Gest,
+                       nsim = 999)
+```
+
+```{r}
+#| cache: true
+plot(G_shan.csr, main = "Monte Carlo Test: G-Function for Conflict Events in Shan")
+```
+
+**L-Function**
+
+```{r}
+L_shan <- Lest(shan_ppp_km, correction = "Ripley")
+plot(L_shan, . -r ~ r, main = "L-Function for Conflict Events in Shan")
+```
+
+**Monte Carlo test with L-Function**
+
+```{r}
+#| cache: true
+L_shan.csr <- envelope(shan_ppp_km,
+                       fun = Lest,
+                       nsim = 99,
+                       rank = 1,
+                       glocal = TRUE)
+```
+
+```{r}
+#| cache: true
+plot(L_shan.csr, main = "Monte Carlo Test: L-Function for Conflict Events in Shan")
+```
+
+**Key Observations:**
+
+1. G-function: The observed G(r) lies above the theoretical line and outside the simulation envelopes for **small to medium distances**, indicating clustering at these scales.
+2. L-function: The observed L(r) - r is consistently above zero and outside the simulation envelopes across all distances, suggesting significant clustering at multiple scales.
+
+Null Hypothesis $H~0$: The spatial distribution of conflict events in Shan is random.
+Alternative Hypothesis $H~1$: The spatial distribution of conflict events in Shan is not random.
+
+Both G and L functions show significant departure from CSR, so we **reject the null hypothesis**. The conflict events in Shan exhibit **clear clustering patterns** at various scales.
+
+**Shan Spatio-Temporal KDE Analysis**
+
+<details>
+
+<summary>Show Code</summary>
+```{r}
+#| eval: false
+shan_area <- adm1_t |>
+  filter(ST == "Shan") |>
+  st_union()
+shan_owin <- as.owin(shan_area)
+shan_ppp <- acled_quarter_ppp[shan_owin]
+shan_ppp <- rescale(shan_ppp, 1000, "km")
+stkde_shan <- spattemp.density(shan_ppp)
+summary(stkde_shan)
+plot_stkde_animated(stkde_shan, "Shan")
+```
+</details>
+
+![](Shan_KDE_animation.gif)
+
+**STKDE Observations:**
+
+1. Temporal Trend: There is an initial spike in conflict events in 2021-Q1, followed by a general decline. However, there is a **sharp resurgence in 2023-Q4 and 2024-Q2**. It seems like Shan suffers from **decently large fluctuations** in conflict intensity.
+2. Spatial Distribution: Conflict hotspots are scattered across Shan, the Northern and Southern areas being persistently affected.
+3. Complex Spatial Pattern: Shan is a curious case, as the conflict patterns appears more dispersed compared to other regions, possibly due to its larger size and diverse ethnic composition.
+
+#### 6.2.5 Summary: Central/Northern Regions
+
+Through our Second Order Analysis, the four hotspots we identified generally conform to similar trends:
+
+1. **Spatial Clustering**: All regions exhibit significant clustering of conflict events at multiple scales, as evidenced by the G and L functions.
+2. **Temporal Evolution**: The intensity of conflicts in these regions generally decreases over time, with some fluctuations in the later quarters of 2023 and 2024.
+
+The spatial distribution of conflict events in Sagaing, Magway, Mandalay, and Shan regions, which form part of Myanmar's **Dry Zone**, is not uniform. Instead, conflict events are concentrated in specific areas, particularly along borders and urban centers, reflecting the strategic significance of these regions. 
+
+The Dry Zone, situated in the central part of Myanmar, is an agriculturally vital area, especially for rice production, despite its relatively arid climate. Control over these regions is crucial for economic and political power, as the ability to control or disrupt food supplies can have widespread consequences. Thus, these regions provide both tactical and strategic advantages, making them hotspots for prolonged conflict.
+
+### 6.3 Southern Region Hotspots
+
+We have identified the distinctive hotspot in the Southern region as **Yangon**. We will now focus on this region to understand the conflict dynamics in more detail.
+
+```{r}
+#| cache: true
+yangon_ppp <- region_ppp(acled_sf_projected, adm1, "Yangon")
+```
+
+**G-Function**
+
+```{r}
+#| cache: true
+yangon_ppp_km <- rescale(yangon_ppp, 1000, "km")
+G_yangon <- Gest(yangon_ppp_km, correction = "border")
+plot(G_yangon, main = "G-Function for Conflict Events in Yangon")
+```
+
+**Monte Carlo test with G-Function**
+
+```{r}
+#| cache: true
+G_yangon.csr <- envelope(yangon_ppp_km,
+                         Gest,
+                         nsim = 999)
+```
+
+```{r, error = FALSE, warning = FALSE, message = FALSE}
+#| cache: true
+#| eval: false
+plot(G_yangon.csr, main = "Monte Carlo Test: G-Function for Conflict Events in Yangon")
+```
+
+![](G_yangon.png)
+
+**L-Function**
+
+```{r}
+#| cache: true
+L_yangon <- Lest(yangon_ppp_km, correction = "Ripley")
+plot(L_yangon, . -r ~ r, main = "L-Function for Conflict Events in Yangon")
+```
+
+**Monte Carlo test with L-Function**
+
+```{r}
+#| cache: true
+L_yangon.csr <- envelope(yangon_ppp_km,
+                         fun = Lest,
+                         nsim = 99,
+                         rank = 1,
+                         glocal = TRUE)
+```
+
+```{r}
+#| cache: true
+plot(L_yangon.csr, main = "Monte Carlo Test: L-Function for Conflict Events in Yangon")
+```
+
+**Key Observations:**
+
+1. G-function: The observed G(r) lies above the theoretical line and outside the simulation envelopes for **small distances**, indicating clustering at short scales.
+2. L-function: The observed L(r) - r is above zero and outside the simulation envelopes for most distances, suggesting significant clustering at multiple scales, though the **effect is less pronounced than in other regions**.
+
+Null Hypothesis $H~0$: The spatial distribution of conflict events in Yangon is random.
+Alternative Hypothesis $H~1$: The spatial distribution of conflict events in Yangon is not random.
+
+Both G and L functions show departure from CSR, so we **reject the null hypothesis**. However, the **clustering in Yangon appears less intense** compared to the other analyzed regions.
+
+**Yangon Spatio-Temporal KDE Analysis**
+
+<details>
+
+<summary>Show Code</summary>
+
+```{r}
+#| eval: false
+yangon_area <- adm1_t |>
+  filter(ST == "Yangon") |>
+  st_union()
+yangon_owin <- as.owin(yangon_area)
+yangon_ppp <- acled_quarter_ppp[yangon_owin]
+yangon_ppp <- rescale(yangon_ppp, 1000, "km")
+stkde_yangon <- spattemp.density(yangon_ppp)
+summary(stkde_yangon)
+plot_stkde_animated(stkde_yangon, "Yangon")
+```
+</details>
+
+![](Yangon_KDE_animation.gif)
+
+**Summary: Southern Region Hotspot Analysis**
+
+1. Temporal Evolution: The intensity of conflicts in Yangon significantly decreases over time, with the highest intensities observed in the earlier quarters of 2021.
+2. Spatial Concentration: Conflict hotspots are primarily concentrated in the Central and Western areas of Yangon, likely corresponding to more densely populated urban areas.
+3. Urban Conflict Dynamics: The pattern of conflict in Yangon differs from other regions, possibly reflecting its status as the largest city and former capital. The conflicts here may be more related to urban unrest and protests rather than armed battles.
 
 ## 7.0 OpenStreetMap Integration: Geospatial Visualization of Conflict Events
 
-## 8.0 Bonus: Predictive Modelling of Conflict Events
+### 7.1 First Order Spatio-Temporal KDE Analysis
+
+Using OpenStreetMap is a great way to visualize the KDE layers we generated earlier. We will create an animated GIF to show the temporal evolution of conflict intensity in Myanmar.
+
+```{r}
+get_osm_map <- function(bbox) {
+  osm_map <- read_osm(bbox, type = "osm", zoom = NULL)
+  return(osm_map)
+}
+```
+
+```{r}
+plot_kde_animated <- function(kde_layers, region_name, adm0, basemap) {
+  total_quarters <- length(kde_layers)
+  
+  saveGIF({
+    for(i in 1:total_quarters) {
+      kde_layer <- kde_layers[[i]]
+      quarter <- names(kde_layers)[i]
+      
+      kde_stars <- st_as_stars(kde_layer)
+      st_crs(kde_stars) <- st_crs(adm0)
+      
+      map <- tm_shape(basemap) +
+        tm_rgb() +
+        tm_shape(kde_stars) +
+        tm_raster(alpha = 0.7, palette = "-viridis", title = "Conflict Density") +
+        tm_shape(adm0) +
+        tm_borders() +
+        tm_layout(title = paste("KDE:", quarter),
+                  legend.outside = TRUE,
+                  legend.outside.position = "right")
+      
+      print(map)
+    }
+  }, movie.name = paste0(region_name, "_OSM_KDE_animation.gif"), 
+     ani.width = 800, ani.height = 600, ani.res = 100, 
+     interval = 1, loop = 0)
+}
+```
+
+```{r}
+#| eval: false
+myanmar_bbox <- st_bbox(adm0)
+basemap <- get_osm_map(myanmar_bbox)
+# plot_kde_animated(kde_layers, "Myanmar", adm0, basemap)
+```
+
+![](Myanmar_OSM_KDE_animation.gif)
+
+::: {.callout-note-tip}
+For the map, I reversed the plasma palette so the higher density areas were more visually striking. 
+:::
+
+## 8.0 Bonus: Fatality Analysis in Selected Regions
+
+Earlier, we identified a few regional hotspots. These two particular regions stand out:
+
+* **Sagaing**: High number of conflict events and fatalities.
+* **Yangon**: Distinct conflict dynamics compared to other regions.
+
+First, let's focus our search area to these two regions, and focus on a few specific event types.
+
+```{r}
+focused_data <- acled_sf %>%
+  mutate(admin1 = clean_admin_name(admin1)) %>%
+  filter(admin1 %in% c("Sagaing", "Yangon"),
+         event_type %in% c("Battles", "Explosions/Remote violence", 
+                           "Strategic developments", "Violence against civilians"))
+```
+
+**Distribution of Fatalities in Sagaing and Yangon**
+
+```{r}
+#| cache: true
+fatalities_by_type <- focused_data %>%
+  group_by(admin1, event_type) %>%
+  summarise(
+    total_fatalities = sum(fatalities, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+pie_chart <- function(data, region) {
+  ggplot(data %>% filter(admin1 == region), 
+         aes(x = "", y = total_fatalities, fill = event_type)) +
+    geom_bar(stat = "identity", width = 1) +
+    coord_polar("y", start = 0) +
+    labs(title = paste("Fatalities by Event Type:", region),
+         fill = "Event Type") +
+    theme_minimal() +
+    theme(axis.text = element_blank(),
+          axis.title = element_blank(),
+          panel.grid = element_blank())
+}
+
+sagaing_pie <- pie_chart(fatalities_by_type, "Sagaing")
+yangon_pie <- pie_chart(fatalities_by_type, "Yangon")
+
+grid.arrange(sagaing_pie, yangon_pie, nrow = 2)
+```
+
+Key Observations:
+
+* Sagaing: Battles account for the majority of fatalities, followed by Explosions/Remote violence. Tis suggests a high-intensity conflict with direct armed confrontations.
+* Yangon: Violence against civilians is the leading cause of fatalities, followed by explosions/remote violence. We've hypothesized that there is a different conflict dynamic in Yangon, potentially more focused on civilian targets.
+
+**Quarterly Fatalities Over Time**
+
+The simple time series plot below was chosen to visualize the temporal trends of fatalities in both region in order to identify possible patterns and peaks.
+
+```{r}
+#| cache: true
+fatalities_over_time <- focused_data %>%
+  group_by(admin1, quarter) %>%
+  summarise(total_fatalities = sum(fatalities, na.rm = TRUE), .groups = "drop")
+
+ggplot(fatalities_over_time, aes(x = quarter, y = total_fatalities, color = admin1, group = admin1)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Quarterly Fatalities in Sagaing and Yangon",
+       x = "Quarter", y = "Total Fatalities", color = "Region") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+Key Observations:
+
+* Sagaing shows a dramatic increase in fatalities from 2021-Q2 to 2021-Q4, followed by a general declining trend with fluctuations.
+* Yangon maintains a relatively lower and more consistent level of fatalities throughout the conflict period. 
+
+**Scatter Plot Analysis: Event Frequency vs Fatalities by Event Type**
+
+```{r}
+#| cache: true
+event_fatality_correlation <- focused_data %>%
+  group_by(admin1, event_type) %>%
+  summarise(
+    event_count = n(),
+    total_fatalities = sum(fatalities, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+ggplot(event_fatality_correlation, aes(x = event_count, y = total_fatalities, color = admin1, shape = event_type)) +
+  geom_point(size = 3) +
+  geom_text_repel(aes(label = event_type), size = 3) +
+  labs(title = "Event Frequency vs Fatalities by Event Type",
+       x = "Number of Events", 
+       y = "Total Fatalities",
+       color = "Region",
+       shape = "Event Type") +
+  theme_minimal()
+```
+
+Key Observations:
+
+* Battles are both frequent and highly lethal in Sagaing. In Yangon, violence against civilians is more common but results in fewer fatalities per event.
+* Explosions/Remote violence in Sagaing are less frequent than battles but still result in high fatalities.
+* Strategic developments are more common in Yangon but result in very few fatalities.
+
+**High-Fatality Events in Sagaing and Yangon**
+
+```{r}
+#| cache: true
+high_fatality_events <- focused_data %>%
+  filter(fatalities > quantile(fatalities, 0.95, na.rm = TRUE))
+
+ggplot() +
+  geom_sf(data = adm1 %>% filter(ST %in% c("Sagaing", "Yangon")), fill = "lightgrey") +
+  geom_sf(data = high_fatality_events, aes(color = event_type, size = fatalities)) +
+  facet_wrap(~admin1) +
+  labs(title = "High-Fatality Events in Sagaing and Yangon",
+       subtitle = "Top 5% of events by Fatality Count",
+       size = "Fatalities",
+       color = "Event Type") +
+  theme_minimal() +
+  theme(
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
+  )
+```
+
+Key Observations:
+
+1. Sagaing: There is a widespread distribution of high-fatality events, primarily battles and explosions/remote violence along the Southern and Central regions.
+2. Yangon: High fatality events are more concentrated and diverse in type.
+
+This is an interesting plot that highlights regional hotspots off intense violence. Sagaing is a large region, with the **widespread nature of high-fatality events** suggesting a more pervasive conflict. In contrast, Yangon's is **more concentrated** indicating specific targeted areas of violence.
+
+**Statistical Testing**
+
+To statistically compare the distribution of fatalities between Sagaing and Yangon, a Wilcoxon rank sum test was performed.
+
+```{r}
+#| cache: true
+wilcox_test <- wilcox.test(fatalities ~ admin1, data = focused_data)
+print(wilcox_test)
+```
+Null Hypothesis $H~0$: There is no difference in the distribution of fatalities between Sagaing and Yangon.
+Alternative Hypothesis $H~1$: There is a difference in the distribution of fatalities between Sagaing and Yangon.
+
+Result: The test yield a p-value < 2.2e-16, which is highly significant. We **reject the null hypothesis** and conclude that the difference in fatality distributions between Sagaing and Yangon is not due to chance.
+
+Conclusion: Te test confirms that the difference in fatality distributions between these two regions is not due to chance. Sagaing and Yangon are experiencing fundamentally different conflict dynamics.
+
+**Summary: Fatality Analysis**
+
+1. Regional Variation: Sagaing and Yangon exhibit different types and intensities of conflict. The importance then falls on understanding the underlying causes and dynamics, and utilizing region-specific approaches in conflict resolution and peacekeeping efforts.
+2. Conflict Evolution: Temporal analysis suggests that while the overall conflict may be showing signs of de-escalation, it remains volatile and unpredictable.
+3. Civilian Impact: The high proportion of fatalities from violence against civilians in Yangon underscores severe humanitarian implications of the conflict, particularly in urban areas.
 
 ## 9.0 Conclusion
 
+### 9.1 Overall Insights
+
+The analysis of the Myanmar conflict from January 2021 to June 2024 has revealed several key insights:
+
+1. Spatial Heterogeneity: The EDA and spatial analyses consistently showed that the conflict in Myanmar is not uniformly distributed. Regions like Sagaing, Magway, Mandalay, Shan, and Yangon emerged as major hotspots, while other areas experienced relatively less intense conflict.
+  * Border Proximity: Conflict hotspots were often concentrated around the borders, suggesting strategic importance and potential cross-border influences.
+2. Temporal Evolution: The first-order and second-order analyses revealed a dynamic conflict landscape. We observed an initial escalation phase in 2021, followed by peaks in intensity during 2022-2023, and hints of potential de-escalation in some areas by 2024. However, this trend varied significantly across regions.
+3. Conflict Intensity and Event Types: Our analysis showed that different regions experienced varying types and intensities of conflict events. For instance, Sagaing saw a high number of battles, while Yangon experienced more incidents of violence against civilians.
+4. Regional Variations: The conflict exhibited distinct characteristics in different regions, likely influenced by factors such as ethnic composition, strategic importance, and historical context.
+
+### 9.2 Personal Takeaways
+
+This exercise provided an invaluable opportunity to gain both a macroscopic and focused view of the ongoing conflict in Myanmar.
+
+The combination of various analytical techniques allowed for a comprehensive understanding of the conflict's complexity, moving beyond headline news to grasp nuanced realities on the ground.
+
+The power of data analysis in conflict studies became evident, as plotting visualizations demonstrate how quantitative methods can complement qualitative understanding to provide a more complete picture.
+
+I'm particularly proud of the scatter plot analysis, temporal trend visualizations and network analysis, which provided unique insights into the conflict dynamics. 
+
+The integration of OpenStreetMap (OSM) data added a crucial geographical context to enhance the interpretability of our findings.
+
 ## References
+
+1. *Myanmar’s Coup Shakes Up Its Ethnic Conflicts*. (2022, January 12). Crisis Group. https://www.crisisgroup.org/asia/south-east-asia/myanmar/myanmars-coup-shakes-its-ethnic-conflicts
+2. *Myanmar coup: Aung San Suu Kyi detained as military seizes control*. (2021, February 1). BBC. https://www.bbc.com/news/world-asia-55882489
+3. Mahtani, S. (2021, September 7). *Myanmar shadow government declares war on military junta, escalating crisis*. The Washington Post. https://www.washingtonpost.com/world/asia_pacific/myanmar-military-war/2021/09/07/46c14ca2-0f93-11ec-baca-86b144fc8a2d_story.html
+4. *Photos of Burma - The World Factbook*. (n.d.). CIA. https://www.cia.gov/the-world-factbook/countries/burma/
+5. Maizland, L., & Ferragamo, M. (2022, January 31). *Myanmar's Troubled History: Coups, Military Rule, and Ethnic Conflict*. Council on Foreign Relations. https://www.cfr.org/backgrounder/myanmar-history-coup-military-rule-ethnic-conflict-rohingya
+6. *The Contested Areas of Myanmar: Subnational Conflict, Aid, and Development*. (2017, October 16). The Asia Foundation. https://asiafoundation.org/publication/contested-areas-myanmar-subnational-conflict-aid-development/
+7. *Identity Crisis: Ethnicity and Conflict in Myanmar*. (2020, August 28). Crisis Group. https://www.crisisgroup.org/asia/south-east-asia/myanmar/312-identity-crisis-ethnicity-and-conflict-myanmar
+8. Loong, S., Smith, B., & Connelly, A. (2022, July 5). *The Dry Zone - IISS Myanmar Conflict Map*. Myanmar Conflict Map. https://myanmar.iiss.org/analysis/dryzone
+9. Claude AI. (n.d.). Claude AI. https://claude.ai/
+
 
 
 

@@ -1,0 +1,371 @@
+#
+# There is insufficient memory for the Java Runtime Environment to continue.
+# Native memory allocation (mmap) failed to map 132120576 bytes for G1 virtual space
+# Possible reasons:
+#   The system is out of physical RAM or swap space
+#   The process is running with CompressedOops enabled, and the Java Heap may be blocking the growth of the native heap
+# Possible solutions:
+#   Reduce memory load on the system
+#   Increase physical memory or swap space
+#   Check if swap backing store is full
+#   Decrease Java heap size (-Xmx/-Xms)
+#   Decrease number of Java threads
+#   Decrease Java thread stack sizes (-Xss)
+#   Set larger code cache with -XX:ReservedCodeCacheSize=
+#   JVM is running with Unscaled Compressed Oops mode in which the Java heap is
+#     placed in the first 4GB address space. The Java Heap base address is the
+#     maximum limit for the native heap growth. Please use -XX:HeapBaseMinAddress
+#     to set the Java Heap base and to place the Java Heap above 4GB virtual address.
+# This output file may be truncated or incomplete.
+#
+#  Out of Memory Error (os_windows.cpp:3469), pid=25152, tid=28596
+#
+# JRE version:  (17.0.1+12) (build )
+# Java VM: Java HotSpot(TM) 64-Bit Server VM (17.0.1+12-LTS-39, mixed mode, sharing, tiered, compressed oops, compressed class ptrs, g1 gc, windows-amd64)
+# No core dump will be written. Minidumps are not enabled by default on client versions of Windows
+#
+
+---------------  S U M M A R Y ------------
+
+Command Line: -Dr.arch=/x64 -Xmx512m -Xrs -Xss2m 
+
+Host: Intel(R) Core(TM) i7-9750H CPU @ 2.60GHz, 12 cores, 7G,  Windows 10 , 64 bit Build 19041 (10.0.19041.4597)
+Time: Sun Sep 22 14:47:01 2024 Malay Peninsula Standard Time elapsed time: 0.075599 seconds (0d 0h 0m 0s)
+
+---------------  T H R E A D  ---------------
+
+Current thread (0x000001a76f8d8d60):  JavaThread "Unknown thread" [_thread_in_vm, id=28596, stack(0x0000009a73400000,0x0000009a77400000)]
+
+Stack: [0x0000009a73400000,0x0000009a77400000]
+Native frames: (J=compiled Java code, j=interpreted, Vv=VM code, C=native code)
+C  0x00007ffd99b8fa1a
+C  0x00007ffd99cee5a4
+C  0x00007ffd99cefd4e
+C  0x00007ffd99cf03b3
+C  0x00007ffd99762b05
+C  0x00007ffd99b8ca39
+C  0x00007ffd99b81502
+C  0x00007ffd9982081b
+C  0x00007ffd99827da6
+C  0x00007ffd99877a1e
+C  0x00007ffd99877c4f
+C  0x00007ffd997f7ad8
+C  0x00007ffd997f8a44
+C  0x00007ffd99cc01e1
+C  0x00007ffd99885791
+C  0x00007ffd99c9f6cc
+C  0x00007ffd9990812f
+C  0x00007ffd99909bd1
+C  0x00007ffdfe0f7509
+C  [R.dll+0x22326d]
+C  [R.dll+0xe51e0]
+C  [R.dll+0xfbe54]
+C  [R.dll+0xfc15b]
+C  [R.dll+0x100300]
+C  [R.dll+0x1016cf]
+C  [R.dll+0x10256d]
+C  [R.dll+0x2076ad]
+C  [R.dll+0x13bf1e]
+C  [R.dll+0xe8e92]
+C  [R.dll+0xfbe54]
+C  [R.dll+0xfc15b]
+C  [R.dll+0x100300]
+C  [R.dll+0x1016cf]
+C  [R.dll+0xfc3be]
+C  [R.dll+0x105b7e]
+C  [R.dll+0xe51e0]
+C  [R.dll+0xfbe54]
+C  [R.dll+0xfc15b]
+C  [R.dll+0xfe10b]
+C  [R.dll+0xfc834]
+C  [R.dll+0xfd843]
+C  [R.dll+0x13bf1e]
+C  [R.dll+0xe8e92]
+C  [R.dll+0xfbe54]
+C  [R.dll+0xfc15b]
+C  [R.dll+0x100300]
+C  [R.dll+0x1016cf]
+C  [R.dll+0xfc3be]
+C  [R.dll+0x100300]
+C  [R.dll+0x1016cf]
+C  [R.dll+0xe5387]
+C  [R.dll+0xfbe54]
+C  [R.dll+0xfc15b]
+C  [R.dll+0x100300]
+C  [R.dll+0x1016cf]
+C  [R.dll+0xfc3be]
+C  [R.dll+0x1044db]
+C  [R.dll+0xfc53f]
+C  [R.dll+0xfd098]
+C  [R.dll+0xfc53f]
+C  [R.dll+0x100300]
+C  [R.dll+0x1016cf]
+C  [R.dll+0xe5387]
+C  [R.dll+0xfbe54]
+C  [R.dll+0xfc15b]
+C  [R.dll+0x100300]
+C  [R.dll+0x1016cf]
+C  [R.dll+0xfc3be]
+C  [R.dll+0x1278dd]
+C  [R.dll+0x127c68]
+C  [R.dll+0x127d02]
+C  [R.dll+0x127d4e]
+C  [Rscript.exe+0x15a9]
+C  [Rscript.exe+0x359a]
+C  [Rscript.exe+0x12ee]
+C  [Rscript.exe+0x1406]
+C  [KERNEL32.DLL+0x17374]
+C  [ntdll.dll+0x4cc91]
+
+
+---------------  P R O C E S S  ---------------
+
+Threads class SMR info:
+_java_thread_list=0x00007ffd99fb7818, length=0, elements={
+}
+
+Java Threads: ( => current thread )
+
+Other Threads:
+  0x000001a7ec9c6de0 GCTaskThread "GC Thread#0" [stack: 0x0000009a24000000,0x0000009a28000000] [id=7976]
+  0x000001a7e6fdb010 ConcurrentGCThread "G1 Main Marker" [stack: 0x0000009a28000000,0x0000009a2c000000] [id=9412]
+  0x000001a7ec9c7340 ConcurrentGCThread "G1 Conc#0" [stack: 0x0000009a2c000000,0x0000009a30000000] [id=17552]
+
+[error occurred during error reporting (printing all threads), id 0xc0000005, EXCEPTION_ACCESS_VIOLATION (0xc0000005) at pc=0x00007ffd998084b7]
+
+VM state: not at safepoint (not fully initialized)
+
+VM Mutex/Monitor currently owned by a thread:  ([mutex/lock_event])
+[0x000001a7d7eff3d0] Heap_lock - owner thread: 0x000001a76f8d8d60
+
+Heap address: 0x00000000e0000000, size: 512 MB, Compressed Oops mode: 32-bit
+
+CDS archive(s) mapped at: [0x0000000000000000-0x0000000000000000-0x0000000000000000), size 0, SharedBaseAddress: 0x0000000800000000, ArchiveRelocationMode: 0.
+Narrow klass base: 0x0000000000000000, Narrow klass shift: 0, Narrow klass range: 0x0
+
+GC Precious Log:
+<Empty>
+
+Heap:
+ garbage-first heap   total 0K, used 0K [0x00000000e0000000, 0x0000000100000000)
+  region size 1024K, 0 young (0K), 0 survivors (0K)
+
+[error occurred during error reporting (printing heap information), id 0xc0000005, EXCEPTION_ACCESS_VIOLATION (0xc0000005) at pc=0x00007ffd99be8d89]
+
+GC Heap History (0 events):
+No events
+
+Deoptimization events (0 events):
+No events
+
+Classes unloaded (0 events):
+No events
+
+Classes redefined (0 events):
+No events
+
+Internal exceptions (0 events):
+No events
+
+VM Operations (0 events):
+No events
+
+Events (1 events):
+Event: 0.050 Loaded shared library C:\Program Files\Java\jdk-17.0.1\bin\java.dll
+
+
+Dynamic libraries:
+0x00007ff684bb0000 - 0x00007ff684bcf000 	C:\Program Files\R\R-4.4.1\bin\x64\Rscript.exe
+0x00007ffe37cb0000 - 0x00007ffe37ea8000 	C:\WINDOWS\SYSTEM32\ntdll.dll
+0x00007ffe36ae0000 - 0x00007ffe36ba1000 	C:\WINDOWS\System32\KERNEL32.DLL
+0x00007ffe35400000 - 0x00007ffe356f6000 	C:\WINDOWS\System32\KERNELBASE.dll
+0x00007ffe35860000 - 0x00007ffe35960000 	C:\WINDOWS\System32\ucrtbase.dll
+0x00007ffd96a20000 - 0x00007ffd9913c000 	C:\Program Files\R\R-4.4.1\bin\x64\R.dll
+0x00007ffe08840000 - 0x00007ffe088d6000 	C:\Program Files\R\R-4.4.1\bin\x64\Rgraphapp.dll
+0x00007ffe36190000 - 0x00007ffe36240000 	C:\WINDOWS\System32\ADVAPI32.dll
+0x00007ffe36320000 - 0x00007ffe363be000 	C:\WINDOWS\System32\msvcrt.dll
+0x00007ffe36560000 - 0x00007ffe36600000 	C:\WINDOWS\System32\sechost.dll
+0x00007ffe37420000 - 0x00007ffe374fa000 	C:\WINDOWS\System32\comdlg32.dll
+0x00007ffe36d40000 - 0x00007ffe36e63000 	C:\WINDOWS\System32\RPCRT4.dll
+0x00007ffe0fbe0000 - 0x00007ffe0fc14000 	C:\Program Files\R\R-4.4.1\bin\x64\Rblas.dll
+0x00007ffe13920000 - 0x00007ffe13bba000 	C:\WINDOWS\WinSxS\amd64_microsoft.windows.common-controls_6595b64144ccf1df_6.0.19041.4355_none_60b8b9eb71f62e16\COMCTL32.dll
+0x00007ffe35d80000 - 0x00007ffe360d3000 	C:\WINDOWS\System32\combase.dll
+0x00007ffe35790000 - 0x00007ffe357b7000 	C:\WINDOWS\System32\bcrypt.dll
+0x00007ffe36f80000 - 0x00007ffe36fab000 	C:\WINDOWS\System32\GDI32.dll
+0x00007ffe360e0000 - 0x00007ffe3618d000 	C:\WINDOWS\System32\shcore.dll
+0x00007ffe369b0000 - 0x00007ffe36adb000 	C:\WINDOWS\System32\ole32.dll
+0x00007ffe353d0000 - 0x00007ffe353f2000 	C:\WINDOWS\System32\win32u.dll
+0x00007ffe35a10000 - 0x00007ffe35b27000 	C:\WINDOWS\System32\gdi32full.dll
+0x00007ffe363c0000 - 0x00007ffe3655f000 	C:\WINDOWS\System32\USER32.dll
+0x00007ffe37500000 - 0x00007ffe37c6c000 	C:\WINDOWS\System32\SHELL32.dll
+0x00007ffe357c0000 - 0x00007ffe3585d000 	C:\WINDOWS\System32\msvcp_win.dll
+0x00007ffe36950000 - 0x00007ffe369a5000 	C:\WINDOWS\System32\SHLWAPI.dll
+0x00007ffe36e70000 - 0x00007ffe36e9f000 	C:\WINDOWS\System32\IMM32.dll
+0x00007ffe2d8a0000 - 0x00007ffe2d8aa000 	C:\WINDOWS\SYSTEM32\VERSION.dll
+0x00007ffe29630000 - 0x00007ffe29657000 	C:\WINDOWS\SYSTEM32\WINMM.dll
+0x00007ffe171c0000 - 0x00007ffe171d1000 	C:\Program Files\R\R-4.4.1\bin\x64\Riconv.dll
+0x00007ffe20990000 - 0x00007ffe20997000 	C:\WINDOWS\SYSTEM32\MSIMG32.dll
+0x00007ffe325f0000 - 0x00007ffe3268e000 	C:\WINDOWS\system32\uxtheme.dll
+0x00007ffe35200000 - 0x00007ffe35232000 	C:\WINDOWS\SYSTEM32\SspiCli.dll
+0x00007ffe17070000 - 0x00007ffe17084000 	C:\Program Files\R\R-4.4.1\library\methods\libs\x64\methods.dll
+0x00007ffe10390000 - 0x00007ffe103ba000 	C:\Program Files\R\R-4.4.1\library\utils\libs\x64\utils.dll
+0x00007ffddc560000 - 0x00007ffddc8fb000 	C:\Program Files\R\R-4.4.1\library\grDevices\libs\x64\grDevices.dll
+0x00007ffe07630000 - 0x00007ffe07681000 	C:\Program Files\R\R-4.4.1\library\graphics\libs\x64\graphics.dll
+0x00007ffdf9d60000 - 0x00007ffdf9dff000 	C:\Program Files\R\R-4.4.1\library\stats\libs\x64\stats.dll
+0x00007ffddea60000 - 0x00007ffdded41000 	C:\Program Files\R\R-4.4.1\bin\x64\Rlapack.dll
+0x00007ffe09450000 - 0x00007ffe0947b000 	C:\Users\Home\AppData\Local\R\win-library\4.4\digest\libs\x64\digest.dll
+0x00007ffe09b50000 - 0x00007ffe09b96000 	C:\Users\Home\AppData\Local\R\win-library\4.4\rlang\libs\x64\rlang.dll
+0x00007ffe075e0000 - 0x00007ffe07622000 	C:\Users\Home\AppData\Local\R\win-library\4.4\cli\libs\x64\cli.dll
+0x00007ffe33b30000 - 0x00007ffe33b42000 	C:\WINDOWS\SYSTEM32\kernel.appcore.dll
+0x00007ffe09170000 - 0x00007ffe091a9000 	C:\Users\Home\AppData\Local\R\win-library\4.4\fastmap\libs\x64\fastmap.dll
+0x00007ffe2d900000 - 0x00007ffe2d90d000 	C:\Users\Home\AppData\Local\R\win-library\4.4\htmltools\libs\x64\htmltools.dll
+0x00007ffe26420000 - 0x00007ffe2642d000 	C:\Users\Home\AppData\Local\R\win-library\4.4\xfun\libs\x64\xfun.dll
+0x00007ffe0c550000 - 0x00007ffe0c571000 	C:\Program Files\R\R-4.4.1\library\tools\libs\x64\tools.dll
+0x00007ffe08460000 - 0x00007ffe08481000 	C:\Users\Home\AppData\Local\R\win-library\4.4\jsonlite\libs\x64\jsonlite.dll
+0x00007ffe08750000 - 0x00007ffe0877f000 	C:\Users\Home\AppData\Local\R\win-library\4.4\yaml\libs\x64\yaml.dll
+0x00007ffdf1930000 - 0x00007ffdf1a82000 	C:\Users\Home\AppData\Local\R\win-library\4.4\Rcpp\libs\x64\Rcpp.dll
+0x00007ffe08190000 - 0x00007ffe081a3000 	C:\Users\Home\AppData\Local\R\win-library\4.4\proxy\libs\x64\proxy.dll
+0x00007ffe26190000 - 0x00007ffe2619e000 	C:\Program Files\R\R-4.4.1\library\class\libs\x64\class.dll
+0x00007ffdfe0a0000 - 0x00007ffdfe0df000 	C:\Users\Home\AppData\Local\R\win-library\4.4\e1071\libs\x64\e1071.dll
+0x00007ffe260b0000 - 0x00007ffe260c0000 	C:\Program Files\R\R-4.4.1\library\KernSmooth\libs\x64\KernSmooth.dll
+0x00007ffe26080000 - 0x00007ffe2608d000 	C:\Users\Home\AppData\Local\R\win-library\4.4\classInt\libs\x64\classInt.dll
+0x00007ffe0a680000 - 0x00007ffe0a6b1000 	C:\Program Files\R\R-4.4.1\library\grid\libs\x64\grid.dll
+0x00007ffe2e9a0000 - 0x00007ffe2e9ae000 	C:\Users\Home\AppData\Local\R\win-library\4.4\magrittr\libs\x64\magrittr.dll
+0x00007ffdd97a0000 - 0x00007ffdd98e3000 	C:\Users\Home\AppData\Local\R\win-library\4.4\units\libs\x64\units.dll
+0x00007ffe34b40000 - 0x00007ffe34b4c000 	C:\WINDOWS\SYSTEM32\CRYPTBASE.DLL
+0x00007ffe35700000 - 0x00007ffe35782000 	C:\WINDOWS\System32\bcryptPrimitives.dll
+0x00007ffd60310000 - 0x00007ffd65f59000 	C:\Users\Home\AppData\Local\R\win-library\4.4\sf\libs\x64\sf.dll
+0x00007ffe35b30000 - 0x00007ffe35c8e000 	C:\WINDOWS\System32\CRYPT32.dll
+0x00007ffe362c0000 - 0x00007ffe3631d000 	C:\WINDOWS\System32\WLDAP32.dll
+0x00007ffe36860000 - 0x00007ffe368cb000 	C:\WINDOWS\System32\WS2_32.dll
+0x00007ffe22310000 - 0x00007ffe2231c000 	C:\WINDOWS\SYSTEM32\Secur32.dll
+0x00007ffe07150000 - 0x00007ffe07177000 	C:\WINDOWS\SYSTEM32\ODBCCP32.dll
+0x00007ffe27450000 - 0x00007ffe27459000 	C:\WINDOWS\SYSTEM32\WSOCK32.dll
+0x00007ffdf6ff0000 - 0x00007ffdf70b0000 	C:\WINDOWS\SYSTEM32\ODBC32.dll
+0x00007ffe35140000 - 0x00007ffe3514a000 	C:\WINDOWS\SYSTEM32\DPAPI.DLL
+0x00007ffe2ea50000 - 0x00007ffe2ea5e000 	C:\Users\Home\AppData\Local\R\win-library\4.4\glue\libs\x64\glue.dll
+0x00007ffe0aa30000 - 0x00007ffe0aa46000 	C:\Users\Home\AppData\Local\R\win-library\4.4\colorspace\libs\x64\colorspace.dll
+0x00007ffdf7930000 - 0x00007ffdf7a70000 	C:\Users\Home\AppData\Local\R\win-library\4.4\vctrs\libs\x64\vctrs.dll
+0x00007ffe098f0000 - 0x00007ffe09910000 	C:\Users\Home\AppData\Local\R\win-library\4.4\fansi\libs\x64\fansi.dll
+0x00007ffe01ab0000 - 0x00007ffe01b03000 	C:\Users\Home\AppData\Local\R\win-library\4.4\utf8\libs\x64\utf8.dll
+0x00007ffe2d9f0000 - 0x00007ffe2d9fe000 	C:\Users\Home\AppData\Local\R\win-library\4.4\tibble\libs\x64\tibble.dll
+0x00007ffe092c0000 - 0x00007ffe092f9000 	C:\Users\Home\AppData\Local\R\win-library\4.4\dplyr\libs\x64\dplyr.dll
+0x00007ffe082d0000 - 0x00007ffe082e2000 	C:\Users\Home\AppData\Local\R\win-library\4.4\purrr\libs\x64\purrr.dll
+0x00007ffe013c0000 - 0x00007ffe01403000 	C:\Users\Home\AppData\Local\R\win-library\4.4\tidyr\libs\x64\tidyr.dll
+0x00007ffdd6320000 - 0x00007ffdd6479000 	C:\Users\Home\AppData\Local\R\win-library\4.4\readr\libs\x64\readr.dll
+0x00007ffdd5870000 - 0x00007ffdd598a000 	C:\Users\Home\AppData\Local\R\win-library\4.4\tzdb\libs\x64\tzdb.dll
+0x00007ffda4670000 - 0x00007ffda4b9d000 	C:\Users\Home\AppData\Local\R\win-library\4.4\stringi\libs\x64\stringi.dll
+0x00007ffdd5740000 - 0x00007ffdd5870000 	C:\Users\Home\AppData\Local\R\win-library\4.4\timechange\libs\x64\timechange.dll
+0x00007ffe22810000 - 0x00007ffe2281f000 	C:\Users\Home\AppData\Local\R\win-library\4.4\lubridate\libs\x64\lubridate.dll
+0x00007ffe225b0000 - 0x00007ffe225be000 	C:\Program Files\R\R-4.4.1\library\parallel\libs\x64\parallel.dll
+0x00007ffdcf690000 - 0x00007ffdcf8bc000 	C:\Users\Home\AppData\Local\R\win-library\4.4\XML\libs\x64\XML.dll
+0x00007ffd956c0000 - 0x00007ffd96a1a000 	C:\Users\Home\AppData\Local\R\win-library\4.4\lwgeom\libs\x64\lwgeom.dll
+0x00007ffd9a0e0000 - 0x00007ffd9b1e3000 	C:\PROGRA~1\R\R-44~1.1\modules\x64\internet.dll
+0x00007ffe21900000 - 0x00007ffe21dd6000 	C:\WINDOWS\SYSTEM32\WININET.dll
+0x00007ffe346b0000 - 0x00007ffe346eb000 	C:\WINDOWS\SYSTEM32\iphlpapi.dll
+0x00007ffe349b0000 - 0x00007ffe34a1a000 	C:\WINDOWS\system32\mswsock.dll
+0x00007ffe346f0000 - 0x00007ffe347ba000 	C:\WINDOWS\SYSTEM32\DNSAPI.dll
+0x00007ffe35d70000 - 0x00007ffe35d78000 	C:\WINDOWS\System32\NSI.dll
+0x00007ffe26dd0000 - 0x00007ffe26dda000 	C:\Windows\System32\rasadhlp.dll
+0x00007ffe2b650000 - 0x00007ffe2b6d0000 	C:\WINDOWS\System32\fwpuclnt.dll
+0x00007ffe221f0000 - 0x00007ffe22200000 	C:\Users\Home\AppData\Local\R\win-library\4.4\base64enc\libs\x64\base64enc.dll
+0x00007ffdfe000000 - 0x00007ffdfe051000 	C:\Users\Home\AppData\Local\R\win-library\4.4\png\libs\x64\png.dll
+0x00007ffd40840000 - 0x00007ffd46762000 	C:\Users\Home\AppData\Local\R\win-library\4.4\terra\libs\x64\terra.dll
+0x00007ffe2c9c0000 - 0x00007ffe2c9ce000 	C:\Program Files\R\R-4.4.1\library\lattice\libs\x64\lattice.dll
+0x00007ffe07d00000 - 0x00007ffe07d11000 	C:\Users\Home\AppData\Local\R\win-library\4.4\sp\libs\x64\sp.dll
+0x00007ffdd4a40000 - 0x00007ffdd4bb5000 	C:\Users\Home\AppData\Local\R\win-library\4.4\raster\libs\x64\raster.dll
+0x00007ffe34200000 - 0x00007ffe34298000 	C:\WINDOWS\system32\schannel.DLL
+0x00007ffe22200000 - 0x00007ffe22215000 	C:\WINDOWS\SYSTEM32\mskeyprotect.dll
+0x00007ffe34d40000 - 0x00007ffe34d7b000 	C:\WINDOWS\SYSTEM32\NTASN1.dll
+0x00007ffe34d80000 - 0x00007ffe34da9000 	C:\WINDOWS\SYSTEM32\ncrypt.dll
+0x00007ffe22320000 - 0x00007ffe22346000 	C:\WINDOWS\system32\ncryptsslp.dll
+0x00007ffe01a80000 - 0x00007ffe01aa1000 	C:\Program Files\R\R-4.4.1\library\foreign\libs\x64\foreign.dll
+0x00007ffe07390000 - 0x00007ffe073a7000 	C:\Users\Home\AppData\Local\R\win-library\4.4\maptools\libs\x64\maptools.dll
+0x00007ffe09830000 - 0x00007ffe09845000 	C:\Users\Home\AppData\Local\R\win-library\4.4\spatstat.utils\libs\x64\spatstat.utils.dll
+0x00007ffddd160000 - 0x00007ffddd32c000 	C:\Program Files\R\R-4.4.1\library\Matrix\libs\x64\Matrix.dll
+0x00007ffdf9c30000 - 0x00007ffdf9c49000 	C:\PROGRA~1\R\R-44~1.1\modules\x64\lapack.dll
+0x00007ffe26670000 - 0x00007ffe2667e000 	C:\Users\Home\AppData\Local\R\win-library\4.4\spatstat.univar\libs\x64\spatstat.univar.dll
+0x00007ffdf12b0000 - 0x00007ffdf1398000 	C:\Users\Home\AppData\Local\R\win-library\4.4\polyclip\libs\x64\polyclip.dll
+0x00007ffe08d90000 - 0x00007ffe08da3000 	C:\Users\Home\AppData\Local\R\win-library\4.4\deldir\libs\x64\deldir.dll
+0x00007ffe07740000 - 0x00007ffe0777b000 	C:\Users\Home\AppData\Local\R\win-library\4.4\spatstat.geom\libs\x64\spatstat.geom.dll
+0x00007ffdfc320000 - 0x00007ffdfc360000 	C:\Users\Home\AppData\Local\R\win-library\4.4\spatstat.random\libs\x64\spatstat.random.dll
+0x00007ffe039e0000 - 0x00007ffe039fc000 	C:\Program Files\R\R-4.4.1\library\nlme\libs\x64\nlme.dll
+0x00007ffe20870000 - 0x00007ffe2087f000 	C:\Users\Home\AppData\Local\R\win-library\4.4\spatstat.sparse\libs\x64\spatstat.sparse.dll
+0x00007ffe1a160000 - 0x00007ffe1a16e000 	C:\Users\Home\AppData\Local\R\win-library\4.4\goftest\libs\x64\goftest.dll
+0x00007ffdf9c80000 - 0x00007ffdf9cb4000 	C:\Users\Home\AppData\Local\R\win-library\4.4\spatstat.explore\libs\x64\spatstat.explore.dll
+0x00007ffe02480000 - 0x00007ffe02497000 	C:\Program Files\R\R-4.4.1\library\rpart\libs\x64\rpart.dll
+0x00007ffe16f00000 - 0x00007ffe16f0e000 	C:\Program Files\R\R-4.4.1\library\splines\libs\x64\splines.dll
+0x00007ffdefea0000 - 0x00007ffdeff63000 	C:\Program Files\R\R-4.4.1\library\mgcv\libs\x64\mgcv.dll
+0x00007ffe168a0000 - 0x00007ffe168ae000 	C:\Users\Home\AppData\Local\R\win-library\4.4\spatstat.model\libs\x64\spatstat.model.dll
+0x00007ffe019f0000 - 0x00007ffe01a03000 	C:\Users\Home\AppData\Local\R\win-library\4.4\spatstat.linnet\libs\x64\spatstat.linnet.dll
+0x00007ffe009c0000 - 0x00007ffe009d2000 	C:\Program Files\R\R-4.4.1\library\tcltk\libs\x64\tcltk.dll
+0x00007ffdcfda0000 - 0x00007ffdcff71000 	C:\PROGRA~1\R\R-44~1.1\Tcl\bin\tcl86.dll
+0x00007ffe21f80000 - 0x00007ffe21f99000 	C:\WINDOWS\SYSTEM32\NETAPI32.dll
+0x00007ffe35240000 - 0x00007ffe3526e000 	C:\WINDOWS\SYSTEM32\USERENV.dll
+0x00007ffe347c0000 - 0x00007ffe347cc000 	C:\WINDOWS\SYSTEM32\NETUTILS.DLL
+
+dbghelp: loaded successfully - version: 4.0.5 - missing functions: none
+symbol engine: initialized successfully - sym options: 0x614 - pdb path: .;C:\Program Files\R\R-4.4.1\bin\x64;C:\WINDOWS\SYSTEM32;C:\WINDOWS\WinSxS\amd64_microsoft.windows.common-controls_6595b64144ccf1df_6.0.19041.4355_none_60b8b9eb71f62e16;C:\Program Files\R\R-4.4.1\library\methods\libs\x64;C:\Program Files\R\R-4.4.1\library\utils\libs\x64;C:\Program Files\R\R-4.4.1\library\grDevices\libs\x64;C:\Program Files\R\R-4.4.1\library\graphics\libs\x64;C:\Program Files\R\R-4.4.1\library\stats\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\digest\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\rlang\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\cli\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\fastmap\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\htmltools\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\xfun\libs\x64;C:\Program Files\R\R-4.4.1\library\tools\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\jsonlite\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\yaml\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\Rcpp\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\proxy\libs\x64;C:\Program Files\R\R-4.4.1\library\class\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\e1071\libs\x64;C:\Program Files\R\R-4.4.1\library\KernSmooth\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\classInt\libs\x64;C:\Program Files\R\R-4.4.1\library\grid\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\magrittr\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\units\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\sf\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\glue\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\colorspace\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\vctrs\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\fansi\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\utf8\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\tibble\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\dplyr\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\purrr\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\tidyr\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\readr\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\tzdb\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\stringi\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\timechange\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\lubridate\libs\x64;C:\Program Files\R\R-4.4.1\library\parallel\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\XML\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\lwgeom\libs\x64;C:\PROGRA~1\R\R-44~1.1\modules\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\base64enc\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\png\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\terra\libs\x64;C:\Program Files\R\R-4.4.1\library\lattice\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\sp\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\raster\libs\x64;C:\Program Files\R\R-4.4.1\library\foreign\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\maptools\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\spatstat.utils\libs\x64;C:\Program Files\R\R-4.4.1\library\Matrix\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\spatstat.univar\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\polyclip\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\deldir\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\spatstat.geom\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\spatstat.random\libs\x64;C:\Program Files\R\R-4.4.1\library\nlme\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\spatstat.sparse\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\goftest\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\spatstat.explore\libs\x64;C:\Program Files\R\R-4.4.1\library\rpart\libs\x64;C:\Program Files\R\R-4.4.1\library\splines\libs\x64;C:\Program Files\R\R-4.4.1\library\mgcv\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\spatstat.model\libs\x64;C:\Users\Home\AppData\Local\R\win-library\4.4\spatstat.linnet\libs\x64;C:\Program Files\R\R-4.4.1\library\tcltk\libs\x64;C:\PROGRA~1\R\R-44~1.1\Tcl\bin;C:\Program Files\R\R-4.4.1\Tcl\lib\reg1.3;C:\Users\Home\AppData\Local\R\win-library\4.4\rJava\libs\x64;C:\Program Files\Java\jdk-17.0.1\bin\server;C:\Program Files\Java\jdk-17.0.1\bin
+
+VM Arguments:
+jvm_args: -Dr.arch=/x64 -Xmx512m -Xrs -Xss2m 
+java_command: <unknown>
+java_class_path (initial): C:/Users/Home/AppData/Local/R/win-library/4.4/rJava/java/boot
+Launcher Type: generic
+
+[Global flags]
+     intx CICompilerCount                          = 4                                         {product} {ergonomic}
+     uint ConcGCThreads                            = 3                                         {product} {ergonomic}
+     uint G1ConcRefinementThreads                  = 10                                        {product} {ergonomic}
+   size_t G1HeapRegionSize                         = 1048576                                   {product} {ergonomic}
+    uintx GCDrainStackTargetSize                   = 64                                        {product} {ergonomic}
+   size_t InitialHeapSize                          = 132120576                                 {product} {ergonomic}
+   size_t MarkStackSize                            = 4194304                                   {product} {ergonomic}
+   size_t MaxHeapSize                              = 536870912                                 {product} {command line}
+   size_t MinHeapDeltaBytes                        = 1048576                                   {product} {ergonomic}
+   size_t MinHeapSize                              = 8388608                                   {product} {ergonomic}
+    uintx NonNMethodCodeHeapSize                   = 5839372                                {pd product} {ergonomic}
+    uintx NonProfiledCodeHeapSize                  = 122909434                              {pd product} {ergonomic}
+    uintx ProfiledCodeHeapSize                     = 122909434                              {pd product} {ergonomic}
+     bool ReduceSignalUsage                        = true                                      {product} {command line}
+    uintx ReservedCodeCacheSize                    = 251658240                              {pd product} {ergonomic}
+     bool SegmentedCodeCache                       = true                                      {product} {ergonomic}
+   size_t SoftMaxHeapSize                          = 536870912                              {manageable} {ergonomic}
+     intx ThreadStackSize                          = 2048                                   {pd product} {command line}
+     bool UseCompressedClassPointers               = true                           {product lp64_product} {ergonomic}
+     bool UseCompressedOops                        = true                           {product lp64_product} {ergonomic}
+     bool UseG1GC                                  = true                                      {product} {ergonomic}
+     bool UseLargePagesIndividualAllocation        = false                                  {pd product} {ergonomic}
+
+Logging:
+Log output configuration:
+ #0: stdout all=warning uptime,level,tags
+ #1: stderr all=off uptime,level,tags
+
+Environment Variables:
+JAVA_HOME=C:\Program Files\Java\jdk-17.0.1
+PATH=C:\rtools44/x86_64-w64-mingw32.static.posix/bin;C:\rtools44/usr/bin;C:\Users\Home\AppData\Local\Programs\Python\Python311\Scripts;C:\Users\Home\AppData\Local\Programs\Python\Python311;C:\rtools44\x86_64-w64-mingw32.static.posix\bin;C:\rtools44\usr\bin;C:\Program Files\R\R-4.4.1\bin\x64;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.2\bin;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.2\libnvvp;C:\Program Files\Common Files\Oracle\Java\javapath;C:\Program Files (x86)\Common Files\Intel\Shared Libraries\redist\intel64\compiler;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\Java\jdk-17.0.1\bin;C:\Program Files (x86)\dotnet\;C:\Program Files\dotnet\;C:\Program Files\Git\cmd;C:\Program Files\NVIDIA Corporation\Nsight Compute 2020.3.0\;C:\Program Files\Kubernetes\Minikube;C:\php;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\nodejs\;C:\ProgramData\chocolatey\bin;C:\Program Files\Docker\Docker\resources\bin;C:\Program Files (x86)\Go\bin;C:\Users\Home\AppData\Local\Programs\Python\Python311\Scripts\;C:\Users\Home\AppData\Local\Programs\Python\Python311\;C:\Users\Home\AppData\Local\Microsoft\WindowsApps;C:\Users\Home\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\Home\AppData\Local\Programs\Ollama;C:\Program Files\Maven\bin;C:\Program Files\JetBrains\IntelliJ IDEA 2024.2.1\bin;C:\Users\Home\AppData\Roaming\npm;C:\Users\Home\AppData\Local\Programs\Microsoft VS Code Insiders\bin;C:\Users\Home\go\bin;C:\Webdrivers\chromedriver-win64;C:\Users\Home\AppData\Local\Pandoc\;C:\Program Files\RStudio\resources\app\bin\quarto\bin;C:\Program Files\RStudio\resources\app\bin\postback
+USERNAME=Shnick
+DISPLAY=:0
+OS=Windows_NT
+PROCESSOR_IDENTIFIER=Intel64 Family 6 Model 158 Stepping 10, GenuineIntel
+
+
+
+---------------  S Y S T E M  ---------------
+
+OS:
+ Windows 10 , 64 bit Build 19041 (10.0.19041.4597)
+OS uptime: 21 days 15:03 hours
+Hyper-V role detected
+
+CPU: total 12 (initial active 12) (6 cores per cpu, 2 threads per core) family 6 model 158 stepping 10 microcode 0xea, cx8, cmov, fxsr, ht, mmx, 3dnowpref, sse, sse2, sse3, ssse3, sse4.1, sse4.2, popcnt, lzcnt, tsc, tscinvbit, avx, avx2, aes, erms, clmul, bmi1, bmi2, adx, fma, vzeroupper, clflush, clflushopt, hv
+
+Memory: 4k page, system-wide physical 8063M (540M free)
+TotalPageFile size 32639M (AvailPageFile size 112M)
+current process WorkingSet (physical memory assigned to process): 521M, peak: 534M
+current process commit charge ("private bytes"): 3677M, peak: 3803M
+
+vm_info: Java HotSpot(TM) 64-Bit Server VM (17.0.1+12-LTS-39) for windows-amd64 JRE (17.0.1+12-LTS-39), built on Sep 27 2021 18:41:35 by "mach5one" with MS VC++ 16.8 (VS2019)
+
+END.
