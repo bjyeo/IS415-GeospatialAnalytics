@@ -12,5 +12,6 @@ _site/InClassEx/**/*.txt
 _site/TakeHomeEx/**/*.txt
 
 TakehomeEx/THE01/shiny
+TakehomeEx/THE01/THE01_cache
 
 /.quarto/

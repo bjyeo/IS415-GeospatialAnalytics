@@ -35,3 +35,8 @@ ggnetwork
 viridisLite
 viridis
 ggrepel
+patchwork
+gridExtra
+animation
+tmaptools
+mapview
