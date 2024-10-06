@@ -49,6 +49,8 @@ website:
         menu:
           - text: "Take Home Exercise 1"
             href: "TakehomeEx/THE01/THE01.html"
+          - text: "Take Home Exercise 2"
+            href: "TakehomeEx/THE02/THE02.html"
     right:
       - href: index.qmd
         text: Home

@@ -1,0 +1,122 @@
+---
+title: "Take Home Exercise 2: Thailand Drug Abuse"
+author: "Bao Jie Yeo"
+date: '2024-09-23'
+date-modified: '2024-09-23'
+execute: 
+  eval: true
+  echo: true
+  freeze: true
+---
+
+## 2.0 Data Collection
+
+
+## 3.0 Data Wrangling
+
+### 3.1 Loading Packages
+
+```{r}
+pacman::p_load(sf, tidyverse, knitr, viridis, patchwork, gridExtra, kableExtra, sfdep, tmap, tmaptools)
+```
+
+### 3.2 Loading Data
+
+```{r}
+drug_offenses_unfiltered <- read_csv("data/aspatial/thai_drug_offenses_2017_2022.csv") %>%
+  filter(types_of_drug_offenses == "drug_use_cases")
+```
+
+```{r}
+head(drug_offenses_unfiltered, n=10)
+```
+
+```{r}
+adm1_unfiltered <- st_read("data/adms", layer = "tha_admbnda_adm1_rtsd_20220121")
+```
+
+```{r}
+all_filled <- all(!is.na(drug_offenses_unfiltered$province_th) & !is.na(drug_offenses_unfiltered$province_en))
+print(all_filled)
+
+if (!all_filled) {
+  missing_rows <- drug_offenses_unfiltered[is.na(drug_offenses$province_th) | is.na(drug_offenses_unfiltered$province_en), ]
+  print(missing_rows)
+}
+```
+
+```{r}
+drug_provinces <- sort(unique(drug_offenses_unfiltered$province_en))
+adm1_provinces <- sort(unique(adm1_unfiltered$ADM1_EN))
+
+all_match <- identical(drug_provinces, adm1_provinces)
+print(all_match)
+
+if (!all_match) {
+  diff_drug <- setdiff(drug_provinces, adm1_provinces)
+  diff_adm1 <- setdiff(adm1_provinces, drug_provinces)
+  
+  print("Provinces in drug_offenses but not in adm1:")
+  print(diff_drug)
+  
+  print("Provinces in adm1 but not in drug_offenses:")
+  print(diff_adm1)
+}
+```
+
+```{r}
+drug_offenses <- drug_offenses_unfiltered %>%
+  mutate(province_en = case_when(
+    province_en == "buogkan" ~ "Bueng Kan",
+    province_en == "Loburi" ~ "Lop Buri",
+    TRUE ~ province_en
+  ))
+
+drug_provinces <- sort(unique(drug_offenses$province_en))
+adm1_provinces <- sort(unique(adm1_unfiltered$ADM1_EN))
+
+all_match <- identical(drug_provinces, adm1_provinces)
+print(paste("All provinces now match:", all_match))
+```
+
+```{r}
+drug_offenses <- drug_offenses %>% select(-province_th)
+adm1 <- adm1_unfiltered %>% select(-ADM1_TH, -ADM1ALT1TH, -ADM1ALT2TH, -ADM0_TH)
+```
+
+```{r}
+drug_offenses <- left_join(adm1, drug_offenses, by = c("ADM1_EN" = "province_en"))
+```
+
+```{r}
+all(is.na(drug_offenses$ADM1_REF))
+all(is.na(drug_offenses$ADM1ALT1EN))
+all(is.na(drug_offenses$ADM1ALT2EN))
+```
+
+```{r}
+drug_offenses <- drug_offenses %>% select(-ADM1_REF, -ADM1ALT1EN, -ADM1ALT2EN)
+```
+
+### 3.3 `tmap` Visualization
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
