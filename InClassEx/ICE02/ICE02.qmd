@@ -3,6 +3,10 @@ title: "In Class Exercise 2"
 author: "Bao Jie Yeo"
 date: "2024-08-26"
 date-modified: "last-modified"
+execute: 
+  eval: false
+  echo: true
+  freeze: true
 ---
 
 ## Loading Packages

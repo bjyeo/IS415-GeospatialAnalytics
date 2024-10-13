@@ -3,6 +3,10 @@ title: "In Class Exercise 3"
 author: "Bao Jie Yeo"
 date: '2024-09-02'
 date-modified: '2024-09-02'
+execute: 
+  eval: false
+  echo: true
+  freeze: true
 ---
 
 ## Getting Started

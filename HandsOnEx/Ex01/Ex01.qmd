@@ -2,6 +2,10 @@
 title: "Hands-on Exercise 1"
 author: "Bao Jie Yeo"
 date: '2024-08-16'
+execute: 
+  eval: false
+  echo: true
+  freeze: true
 ---
 
 ## Getting Started

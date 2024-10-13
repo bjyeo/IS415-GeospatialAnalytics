@@ -3,7 +3,7 @@ title: "In Class Exercise 5"
 date: "2024-09-16"
 date-modified: "last-modified"
 execute: 
-  eval: true
+  eval: false
   echo: true
   freeze: true
 ---
