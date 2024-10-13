@@ -13,6 +13,22 @@ This exercise aims to analyze the spatial distribution of drug offenses in Thail
 
 ## 1.0 Introduction
 
+Drug abuse in Thailand has long been a critical issue, impacting public health, security, and socioeconomic conditions. Over the years, the problem has evolved, with various regions experiencing different degrees of drug-related challenges. This study explores the trends, spatial patterns, and hotspots of drug abuse at the provincial level in Thailand from 2017 to 2022, providing insights into how the problem has shifted geographically over time.
+
+### 1.1 Timeline
+
+The analysis focuses on the period from 2017 to 2022, a critical timeline marked by several national efforts to address drug trafficking and consumption. The timeline was chosen for its relevance to recent policy changes and enforcement strategies aimed at curbing drug abuse. During this period, the Thai government has enacted various anti-drug measures, alongside increasing concerns over the trafficking of methamphetamines and other illicit substances from neighboring countries.
+
+* **2017 - 2019**: The early part of the timeline saw persistent hotspots around the capital, Bangkok, and some southern regions. Key interventions during this period were focused on disrupting drug trafficking networks, particularly those connected to cross-border trade routes.
+* **2019 - 2021**: As drug abuse patterns shifted, there was a notable increase in spatial clustering in southern Thailand, particularly around key provinces such as Nakhon Si Thammarat and Surat Thani. This coincided with an escalation in the movement of drugs across the Andaman coast, leading to new hotspots emerging in these regions.
+* **2022**: The final year of analysis highlights the culmination of these trends, with significant clustering in both the southern and central regions, alongside persistent cold spots in northern Thailand. Despite ongoing government efforts, the rise in drug-related offenses in certain provinces reflects the challenges in containing the problem on a regional level.
+
+### 1.2 Key Regions
+
+* **Central Thailand and Bangkok**: Historically, Bangkok and its surrounding provinces, including Samut Prakan, have been central to drug-related activities due to their population density and role as transportation hubs. Bangkok’s proximity to high-trafficking corridors makes it a critical area for both drug consumption and distribution.
+* **Southern Thailand**: The southern provinces, particularly Nakhon Si Thammarat, Surat Thani, and Phuket, have become increasingly prominent in the later years of the analysis. 
+* **Northern and Northeastern Thailand**: In contrast to the central and southern regions, northern provinces such as Nakhon Sawan, Chai Nat, and Suphan Buri have consistently emerged as areas with relatively low levels of drug abuse
+
 ## 2.0 Data Collection
 
 ### 2.1 Thailand Drug Offense Data
@@ -28,7 +44,7 @@ Relevant [Geospatial data](https://data.humdata.org/dataset/cod-ab-tha?) was gat
 ### 3.1 Loading Packages
 
 ```{r}
-pacman::p_load(sf, tidyverse, knitr, viridis, patchwork, gridExtra, kableExtra, sfdep, tmap, tmaptools, patchwork, scales, gganimate, rayshader, spdep, ggrepel)
+pacman::p_load(sf, tidyverse, knitr, viridis, patchwork, gridExtra, kableExtra, sfdep, tmap, tmaptools, patchwork, scales, gganimate, spdep, ggrepel, car)
 ```
 
 ### 3.2 Loading Data
@@ -1081,7 +1097,65 @@ Key Observations:
 3. **Shift in Hot Spots**: In 2017, the hot spots included multiple provinces in central Thailand but by 2021, the focus has shifted primarily to the southern province of Nakhon Si Thammarat. This shift highlights a changing landscape of drug abuse problems over time, where southern Thailand is becoming a more critical area for attention in 2021.
 4. **Expansion of Cold Spots**: In 2021, cold spots have expanded, particularly in the western and central provinces. This suggests that drug abuse is being controlled effectively in more regions over time, leading to the expansion of areas with consistently low drug abuse rates.
 
-## 6.0 Bonus: 
+## 6.0 Bonus: Trend Analysis with Linear Regression
+
+To round up our analysis, we will conduct a linear regression analysis to explore the temporal trend of drug offenses in Thailand. We will fit a linear model to the total number of drug abuse cases over time to determine if there is a significant linear relationship between the fiscal year and the number of cases. 
+
+```{r}
+drug_summary_all <- drug_offenses_cleaned %>%
+  group_by(province_en, fiscal_year) %>%
+  summarize(total_cases = sum(no_cases, na.rm = TRUE)) %>%
+  ungroup()
+
+map_data_all <- adm1 %>%
+  left_join(drug_summary_all, by = c("ADM1_EN" = "province_en"))
+```
+```{r}
+#| cache: true
+trend_analysis <- map_data_all %>%
+  group_by(fiscal_year) %>%
+  summarize(total_cases = sum(total_cases, na.rm = TRUE))
+```
+
+```{r}
+#| cache: true
+model <- lm(total_cases ~ fiscal_year, data = trend_analysis)
+ 
+dw_test <- car::durbinWatsonTest(model)
+
+cat("Linear Regression Results:\n")
+print(summary(model))
+cat("\nDurbin-Watson Test for Autocorrelation:\n")
+print(dw_test)
+```
+
+Key Observations:
+
+**Linear Regression**
+
+* **Intercept**: The intercept is 1,564,112, which represents the estimated number of drug abuse cases at the start of the time period (i.e., when fiscal_year is 0). However, this value is not very meaningful because the fiscal year variable does not have a meaningful zero point in this context. The standard error of the intercept is very large (75,729,574.6), indicating high uncertainty about the estimate.
+* **Fiscal Year Coefficient**: The coefficient for fiscal_year is -447.9, which suggests that for each additional year, the total number of drug abuse cases is expected to decrease by 448 cases on average. However, this effect is not statistically significant, as the p-value for this coefficient is 0.991 (far greater than the conventional significance threshold of 0.05). This means that the fiscal year does not appear to be a meaningful predictor of the total number of drug abuse cases.
+
+**Model Fit**
+
+* **R-squared**: The R-squared value is very low (3.567e-05), which means that the model explains almost none of the variance in the total number of drug abuse cases. Essentially, fiscal year alone does not account for any substantial variation in the number of cases.
+* **Adjusted R-squared**: The adjusted R-squared is negative (-0.25), further confirming that the model has no explanatory power. Negative adjusted R-squared values occur when the model performs worse than a simple horizontal line (i.e., no relationship).
+* **F-statistic and p-value**: The F-statistic for the model is very small (0.0001427), and the p-value is 0.991, indicating that the overall model is not statistically significant. There is no evidence to suggest that there is a meaningful linear trend in the total number of drug abuse cases over time.
+
+**Residuals**
+
+* The residuals (the differences between observed and predicted values) show some variation, but overall, they do not suggest any clear trend or pattern.
+
+**Durbin-Watson Test**
+
+* **Durbin-Watson Statistic**: The Durbin-Watson statistic is 2.259606. A value of 2 indicates no autocorrelation in the residuals, which means the errors in the model are not correlated with each other over time. This is a good result and suggests that the assumption of no autocorrelation in the residuals is met.
+* **p-value**: The p-value for the Durbin-Watson test is 0.73, which means we fail to reject the null hypothesis of no autocorrelation. There is no significant autocorrelation in the residuals, so this assumption holds for the model.
+
+Overall Insights:
+
+1. **No Significant Trend**: The linear regression results indicate that there is no significant trend in the total number of drug abuse cases in Thailand over the years included in this analysis. The fiscal year does not seem to predict the number of drug cases.
+2. **Model Weakness**: The model has a very low R-squared value, meaning it explains almost none of the variability in the data. This suggests that other factors (not just time) are likely influencing the total number of drug abuse cases.
+3. **No Autocorrelation**: The Durbin-Watson test indicates that the residuals of the model are not autocorrelated, so the assumption of independent errors is met.
 
 ## 7.0 Conclusion
 
@@ -1097,40 +1171,3 @@ We can also conclude from our hypotheses that the spatial distribution of drug o
 ## References
 
 1. Claude AI. (n.d.). Claude AI. https://claude.ai/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
