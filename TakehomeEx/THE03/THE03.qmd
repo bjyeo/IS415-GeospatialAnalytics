@@ -1,0 +1,12 @@
+---
+title: "Take Home Exercise 3"
+author: "Bao Jie Yeo"
+date: '2024-10-27'
+date-modified: '2024-10-27'
+execute: 
+  eval: true
+  echo: true
+  freeze: true
+---
+
+Stay tuned.
