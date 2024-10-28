@@ -1,17 +1,23 @@
 ---
 title: "Hands-on Exercise 10"
 author: "Bao Jie Yeo"
-date: '2024-10-27'
-date-modified: '2024-10-27'
+date: '2024-10-28'
+date-modified: '2024-10-28'
 execute: 
   eval: true
   echo: true
   freeze: true
 ---
 
+:::{.callout-note title="Hands-on Note"}
+This exercise combines Hands-on Exercise 10 and Hands-on Exercise 11.
+:::
+
+# Part 1: Calibrating Hedonic Price Model
+
 ## Overview
 
-**Geographically weighted regression (GWR)** is a spatial statistical technique that takes into account spatial heterogeneity in the relationships between variables. In this exercise, we will attempt to learn how to build hedonic pricing models using GWR methods. The dependent variable is the resale prices of condominiums in 2015. The independent variables are either structual and locational.
+**Geographically weighted regression (GWR)** is a spatial statistical technique that takes into account spatial heterogeneity in the relationships between variables. In this exercise, we will attempt to learn how to build hedonic pricing models using GWR methods. The dependent variable is the resale prices of condominiums in 2015. The independent variables are either structural and locational.
 
 ## Datasets
 
@@ -431,3 +437,177 @@ lm.morantest(condo.mlr1, nb_lw)
 The Global Moran’s I test for residual spatial autocorrelation shows that it’s p-value is less than 0.00000000000000022 which is less than the alpha value of 0.05. Hence, we will reject the null hypothesis that the residuals are randomly distributed.
 
 Since the Observed Global Moran I = 0.1424418 which is greater than 0, we can infer than the residuals resemble cluster distribution.
+
+# Part 2: Building Hedonic Price Models using GWModel
+
+This section of the exercise deals with modelling hedonic pricing using both the fixed and adaptive bandwidth schemes
+
+## Building Fixed Bandwidth GWR Model
+
+We will use `bw.gwr()` from GWModel to determine the optimal fixed bandwidth to use in the model. Notice that the argument **adaptive** is set to **FALSE** to indicate that we are interested to compute the fixed bandwidth.
+
+There are two possible approaches to determine the stopping rule. They are: CV cross-validation approach and AIC corrected (AICc) approach. We define the stopping rule using approach agreement.
+
+### Computing Fixed Bandwidth
+
+```{r}
+bw.fixed <- bw.gwr(formula = SELLING_PRICE ~ AREA_SQM + AGE + PROX_CBD + 
+                     PROX_CHILDCARE + PROX_ELDERLYCARE  + PROX_URA_GROWTH_AREA + 
+                     PROX_MRT   + PROX_PARK + PROX_PRIMARY_SCH + 
+                     PROX_SHOPPING_MALL + PROX_BUS_STOP + NO_Of_UNITS + 
+                     FAMILY_FRIENDLY + FREEHOLD, 
+                   data=condo_resale.sp, 
+                   approach="CV", 
+                   kernel="gaussian", 
+                   adaptive=FALSE, 
+                   longlat=FALSE)
+```
+
+The result shows that the recommended bandwidth is 971.3405 metres. 
+
+**Question**: Why is the bandwidth given in metres?
+**Answer**: The bandwidth is given in metres because the data is projected in SVY21.
+
+### GWModel Method: Fixed Bandwidth
+
+```{r}
+gwr.fixed <- gwr.basic(formula = SELLING_PRICE ~ AREA_SQM + AGE + PROX_CBD + 
+                         PROX_CHILDCARE + PROX_ELDERLYCARE  + PROX_URA_GROWTH_AREA + 
+                         PROX_MRT   + PROX_PARK + PROX_PRIMARY_SCH + 
+                         PROX_SHOPPING_MALL + PROX_BUS_STOP + NO_Of_UNITS + 
+                         FAMILY_FRIENDLY + FREEHOLD, 
+                       data=condo_resale.sp, 
+                       bw=bw.fixed, 
+                       kernel = 'gaussian', 
+                       longlat = FALSE)
+```
+
+The output is saved in a list of class “gwrm”. The code below can be used to display the model output.
+
+```{r}
+gwr.fixed
+```
+
+## Building Adaptive Bandwidth GWR Model
+
+### Computing Adaptive Bandwidth
+
+Similar to earlier, we first use `bw.gwr()` to determine the optimal adaptive bandwidth to use in the model. Notice that the argument **adaptive** is set to **TRUE** to indicate that we are interested to compute the adaptive bandwidth.
+
+```{r}
+bw.adaptive <- bw.gwr(formula = SELLING_PRICE ~ AREA_SQM + AGE  + 
+                        PROX_CBD + PROX_CHILDCARE + PROX_ELDERLYCARE    + 
+                        PROX_URA_GROWTH_AREA + PROX_MRT + PROX_PARK + 
+                        PROX_PRIMARY_SCH + PROX_SHOPPING_MALL   + PROX_BUS_STOP + 
+                        NO_Of_UNITS + FAMILY_FRIENDLY + FREEHOLD, 
+                      data=condo_resale.sp, 
+                      approach="CV", 
+                      kernel="gaussian", 
+                      adaptive=TRUE, 
+                      longlat=FALSE)
+```
+
+### Constructing Adaptive Bandwidth GWR Model
+
+```{r}
+gwr.adaptive <- gwr.basic(formula = SELLING_PRICE ~ AREA_SQM + AGE + 
+                            PROX_CBD + PROX_CHILDCARE + PROX_ELDERLYCARE + 
+                            PROX_URA_GROWTH_AREA + PROX_MRT + PROX_PARK + 
+                            PROX_PRIMARY_SCH + PROX_SHOPPING_MALL + PROX_BUS_STOP + 
+                            NO_Of_UNITS + FAMILY_FRIENDLY + FREEHOLD, 
+                          data=condo_resale.sp, bw=bw.adaptive, 
+                          kernel = 'gaussian', 
+                          adaptive=TRUE, 
+                          longlat = FALSE)
+```
+
+```{r}
+gwr.adaptive
+```
+
+## Visualizing GWR Output
+
+In addition to regression residuals, the output feature class table includes fields for observed and predicted y values, condition number (cond), Local R2, residuals, and explanatory variable coefficients and standard errors:
+
+* Condition Number: This diagnostic statistic measures the stability of the regression coefficients. A condition number greater than 30 indicates multicollinearity and the model may be unreliable.
+* Local R2: This field contains the local R2 values for each feature. Low values indicate that the model does not fit the data well. We map R2 values to show the spatial distribution of model fit.
+* Predicted: This field contains the predicted y values for each feature. We map predicted values to show the spatial distribution of the model.
+* Residuals: To obtain the residuals, the predicted y values are subtracted from the observed y values. We map residuals to show the spatial distribution of model error.
+* Coefficient Standard Error: This field contains the standard errors of the coefficients. We map the standard errors to show the spatial distribution of the uncertainty in the coefficients.
+
+These fields are stored in a SpatialPointsDataFrame or SpatialPolygonsDataFrame object integrated with fit.points, GWR coefficient estimates, y value, predicted values, coefficient standard errors and t-values in its “data” slot in an object called **SDF** of the output list.
+
+## Converting SDF into sf data.frame
+
+```{r}
+condo_resale.sf.adaptive <- st_as_sf(gwr.adaptive$SDF) %>%
+  st_transform(crs=3414)
+```
+
+```{r}
+condo_resale.sf.adaptive.svy21 <- st_transform(condo_resale.sf.adaptive, 3414)
+condo_resale.sf.adaptive.svy21
+```
+
+```{r}
+gwr.adaptive.output <- as.data.frame(gwr.adaptive$SDF)
+condo_resale.sf.adaptive <- cbind(condo_resale.res.sf, as.matrix(gwr.adaptive.output))
+```
+
+We will use `glimpse` to examine the structure of the data frame.
+
+```{r}
+glimpse(condo_resale.sf.adaptive)
+```
+
+```{r}
+summary(gwr.adaptive$SDF$yhat)
+```
+
+## Visualizing Local R2
+
+```{r}
+tm_shape(mpsz_svy21)+
+  tm_polygons(alpha = 0.1) +
+tm_shape(condo_resale.sf.adaptive) +  
+  tm_dots(col = "Local_R2",
+          border.col = "gray60",
+          border.lwd = 1) +
+  tm_view(set.zoom.limits = c(11,14))
+```
+
+## Visualizing Coefficient Estimates
+
+```{r}
+AREA_SQM_SE <- tm_shape(mpsz_svy21)+
+  tm_polygons(alpha = 0.1) +
+tm_shape(condo_resale.sf.adaptive) +  
+  tm_dots(col = "AREA_SQM_SE",
+          border.col = "gray60",
+          border.lwd = 1) +
+  tm_view(set.zoom.limits = c(11,14))
+
+AREA_SQM_TV <- tm_shape(mpsz_svy21)+
+  tm_polygons(alpha = 0.1) +
+tm_shape(condo_resale.sf.adaptive) +  
+  tm_dots(col = "AREA_SQM_TV",
+          border.col = "gray60",
+          border.lwd = 1) +
+  tm_view(set.zoom.limits = c(11,14))
+
+tmap_arrange(AREA_SQM_SE, AREA_SQM_TV, 
+             asp=1, ncol=2,
+             sync = TRUE)
+```
+
+### Visualizing By URA Planning Region
+
+```{r}
+tm_shape(mpsz_svy21[mpsz_svy21$REGION_N=="CENTRAL REGION", ])+
+  tm_polygons()+
+tm_shape(condo_resale.sf.adaptive) + 
+  tm_bubbles(col = "Local_R2",
+           size = 0.15,
+           border.col = "gray60",
+           border.lwd = 1)
+```

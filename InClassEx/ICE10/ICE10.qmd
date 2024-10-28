@@ -1,0 +1,220 @@
+---
+title: "In Class Exercise 10"
+author: "Bao Jie Yeo"
+date: '2024-10-28'
+date-modified: '2024-10-28'
+execute: 
+  eval: true
+  echo: true
+  freeze: true
+---
+
+## Loading Packages
+
+```{r}
+pacman::p_load(olsrr, ggstatsplot, sf, 
+               tmap, tidyverse, gtsummary,
+               performance, see, sfdep)
+```
+
+## Importing Data
+
+```{r}
+condo_resale <- read_csv("data/aspatial/Condo_resale_2015.csv")
+
+mpsz <- read_rds("data/rds/mpsz.rds")
+
+condo_resale_sf <- read_rds(
+  "data/rds/condo_resale_sf.rds")
+```
+
+## Correlation Analysis: ggstatsplot
+
+```{r}
+#| fig-width: 13
+#| fig-height: 8
+ggcorrmat(condo_resale[, 5:23])
+```
+
+## Building Hedonic Price Model using Multiple Linear Regression
+
+```{r}
+condo_mlr <- lm(formula = SELLING_PRICE ~ AREA_SQM + 
+                  AGE	+ PROX_CBD + PROX_CHILDCARE + 
+                  PROX_ELDERLYCARE + PROX_URA_GROWTH_AREA + 
+                  PROX_HAWKER_MARKET	+ PROX_KINDERGARTEN	+ 
+                  PROX_MRT	+ PROX_PARK	+ PROX_PRIMARY_SCH + 
+                  PROX_TOP_PRIMARY_SCH + PROX_SHOPPING_MALL	+ 
+                  PROX_SUPERMARKET + PROX_BUS_STOP + 
+                  NO_Of_UNITS + FAMILY_FRIENDLY + 
+                  FREEHOLD + LEASEHOLD_99YR, 
+                data=condo_resale_sf)
+summary(condo_mlr)
+```
+
+## Generating tidy linear regression report
+
+```{r}
+ols_regress(condo_mlr)
+```
+
+## Variable Selection
+
+```{r}
+condo_fw_mlr <- ols_step_forward_p(
+  condo_mlr,
+  p_val = 0.05,
+  details = FALSE)
+condo_fw_mlr
+```
+
+```{r}
+#| fig-width: 12
+#| fig-height: 10
+plot(condo_fw_mlr)
+```
+
+## Backward stepwise multiple linear regression
+
+```{r}
+condo_bw_mlr <- ols_step_backward_p(
+  condo_mlr,
+  p_val = 0.05,
+  details = FALSE)
+condo_bw_mlr
+```
+
+## Stepwise multiple linear regression
+
+```{r}
+condo_sb_mlr <- ols_step_both_p(
+  condo_mlr,
+  p_val = 0.05,
+  details = FALSE)
+condo_sb_mlr
+```
+
+## Comparing Performance
+
+```{r}
+metric <- compare_performance(condo_mlr, 
+                    condo_fw_mlr$model,
+                    condo_bw_mlr$model,
+                    condo_sb_mlr$model)
+```
+
+```{r}
+metric$Name <- gsub(".*\\\\([a-zA-Z0-9_]+)\\\\, \\\\model\\\\.*", "\\1", metric$Name)
+```
+
+### Visual Comparison
+
+```{r}
+plot(metric)
+```
+
+### Visualizing Model Parameters
+
+```{r}
+ggcoefstats(condo_sb_mlr$model,
+            sort = "ascending")
+```
+
+## Checking for Multicollinearity
+
+```{r}
+check_collinearity(condo_sb_mlr$model)
+```
+
+### Visualizing Multicollinearity
+
+```{r}
+#| fig-width: 12
+#| fig-height: 6
+plot(check_collinearity(condo_sb_mlr$model)) +
+  theme(axis.text.x = element_text(
+    angle = 45, hjust = 1))
+```
+
+## Linearity Assumption Test
+
+```{r}
+out <- plot(check_model(condo_sb_mlr$model, 
+                        panel = FALSE))
+out[[2]]
+```
+
+## Normality Assumption Test
+
+```{r}
+plot(check_normality(condo_sb_mlr$model))
+```
+
+## Checking Outliers
+
+```{r}
+outliers <- check_outliers(condo_sb_mlr$model,
+                           method = "cook")
+outliers
+```
+
+### Visualizing Outliers
+
+```{r}
+plot(check_outliers(condo_sb_mlr$model,
+                           method = "cook"))
+```
+
+## Spatial Non-stationary Assumption
+
+The hedonic model we try to build are using geographically referenced attributes, hence it is also important for us to visual the residual of the hedonic pricing model.
+
+-   Ho: The residuals are randomly distributed (also known as spatial stationary) 
+-   H1: The residuals are spatially non-stationary
+
+```{r}
+mlr_output <- as.data.frame(condo_fw_mlr$model$residuals) %>%
+  rename(`FW_MLR_RES` = `condo_fw_mlr$model$residuals`)
+```
+
+```{r}
+condo_resale_sf <- cbind(condo_resale_sf, 
+                        mlr_output$FW_MLR_RES) %>%
+  rename(`MLR_RES` = `mlr_output.FW_MLR_RES`)
+```
+
+```{r}
+tmap_mode("plot")
+tm_shape(mpsz)+
+  tmap_options(check.and.fix = TRUE) +
+  tm_polygons(alpha = 0.4) +
+tm_shape(condo_resale_sf) +  
+  tm_dots(col = "MLR_RES",
+          alpha = 0.6,
+          style="quantile") 
+```
+
+## Spatial Stationary Test
+
+```{r}
+condo_resale_sf <- condo_resale_sf %>%
+  mutate(nb = st_knn(geometry, k=6,
+                     longlat = FALSE),
+         wt = st_weights(nb,
+                         style = "W"),
+         .before = 1)
+```
+
+```{r}
+global_moran_perm(condo_resale_sf$MLR_RES, 
+                  condo_resale_sf$nb, 
+                  condo_resale_sf$wt, 
+                  alternative = "two.sided", 
+                  nsim = 99)
+```
+
+### Statistical Interpretation
+
+The Global Moran's I test for residual spatial autocorrelation shows that **its p-value is less than the alpha value of 0.05**. Hence, we **reject the null hypothesis** that the residuals are randomly distributed.
+
+Since the Observed Global Moran I = 0.25586 which is greater than 0, we can infer that the residuals resemble **cluster distribution**.
