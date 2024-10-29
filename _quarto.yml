@@ -17,6 +17,8 @@ project:
     - "Ex06.qmd"
     - "THE02.qmd"
     - "ICE09.qmd"
+    - "ICE10.qmd"
+    - "Ex10.qmd"
 
 website:
   title: "IS415 Geospatial Analytics"
