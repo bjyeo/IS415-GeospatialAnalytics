@@ -1,13 +1,15 @@
-pacman::p_load(shiny, shinydashboard, shinyWidgets, sf, tidyverse, 
+pacman::p_load(shiny, shinydashboard, shinyWidgets, shinyBS, sf, tidyverse, 
                viridis, spatstat, spdep, DT, plotly, tmap, tmaptools)
 
 # Data preprocessing function
 preprocess_data <- function() {
   # Load raw data
   indo_schools <- read_csv("data/aspatial/complete_data.csv")
-  adm2 <- st_read("data/geospatial", layer = "geoBoundaries-IDN-ADM2_simplified")
+  adm2 <- st_read("data/geospatial", layer = "geoBoundaries-IDN-ADM2_simplified") %>%
+    st_make_valid()
   batas <- st_read("data/geospatial", 
-                   layer = "BATAS_DESA_DESEMBER_2019_DUKCAPIL_DKI_JAKARTA")
+                   layer = "BATAS_DESA_DESEMBER_2019_DUKCAPIL_DKI_JAKARTA") %>%
+    st_make_valid()
   
   # Clean and filter Jakarta schools
   jakarta_schools <- indo_schools %>% 
@@ -20,6 +22,7 @@ preprocess_data <- function() {
       coords = c("long", "lat"), 
       crs = 4326
     ) %>%
+    st_make_valid() %>%
     mutate(
       school_level = case_when(
         stage %in% c("SD", "SDLB") ~ "Elementary",
@@ -72,9 +75,11 @@ preprocess_data <- function() {
   adm2_jakarta_utm <- st_transform(adm2_jakarta, 32748)
   batas_clean_utm <- st_transform(batas_clean, 32748)
   
-  jakarta_schools_utm <- st_intersection(
+  jakarta_schools_utm <- st_join(
     jakarta_schools_utm,
-    st_union(batas_clean_utm)
+    st_union(batas_clean_utm) %>% st_sf(),
+    join = st_intersects,
+    left = FALSE  # Only keep points that intersect
   )
   
   # Return preprocessed datasets

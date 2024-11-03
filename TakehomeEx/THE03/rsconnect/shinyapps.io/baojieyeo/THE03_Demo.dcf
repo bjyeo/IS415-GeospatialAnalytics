@@ -1,0 +1,13 @@
+name: THE03_Demo
+title: THE03_Demo
+username: baojieyeo
+account: baojieyeo
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 13215726
+bundleId: 9308423
+url: https://baojieyeo.shinyapps.io/THE03_Demo/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: kde_Kota_Jakarta_Barat.png|kde_Kota_Jakarta_Pusat.png|kde_Kota_Jakarta_Selatan.png|kde_Kota_Jakarta_Timur.png|kde_Kota_Jakarta_Utara.png|THE03.qmd
