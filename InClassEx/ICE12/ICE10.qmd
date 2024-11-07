@@ -1,0 +1,12 @@
+---
+title: "In Class Exercise 12"
+author: "Bao Jie Yeo"
+date: '2024-11-11'
+date-modified: '2024-11-11'
+execute: 
+  eval: true
+  echo: true
+  freeze: true
+---
+
+Stay tuned.
