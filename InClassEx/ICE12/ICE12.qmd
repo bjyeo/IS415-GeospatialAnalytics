@@ -1,0 +1,21 @@
+---
+title: "In Class Exercise 12"
+author: "Bao Jie Yeo"
+date: '2024-11-11'
+date-modified: '2024-11-11'
+execute: 
+  eval: true
+  echo: true
+  freeze: true
+---
+
+## Loading Packages
+
+```{r}
+pacman::p_load(sf, spdep, GWmodel, SpatialML, 
+               tmap, rsample, yardstick, tidyverse,
+               knitr, kableExtra, spatialRF)
+```
+
+## 
+

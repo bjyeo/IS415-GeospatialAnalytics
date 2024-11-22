@@ -1,0 +1,15 @@
+{
+  "hash": "433527d28a9499a6de358765e2417e15",
+  "result": {
+    "engine": "knitr",
+    "markdown": "---\ntitle: \"In Class Exercise 12\"\nauthor: \"Bao Jie Yeo\"\ndate: '2024-11-11'\ndate-modified: '2024-11-11'\nexecute: \n  eval: true\n  echo: true\n  freeze: true\n---\n\n\n## Loading Packages\n\n\n::: {.cell}\n\n```{.r .cell-code}\npacman::p_load(sf, spdep, GWmodel, SpatialML, \n               tmap, rsample, yardstick, tidyverse,\n               knitr, kableExtra, spatialRF)\n```\n:::\n\n\n## \n\n",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

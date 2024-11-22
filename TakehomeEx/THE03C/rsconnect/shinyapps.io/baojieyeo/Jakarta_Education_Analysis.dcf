@@ -1,0 +1,12 @@
+name: Jakarta_Education_Analysis
+title: Jakarta_Education_Analysis
+username: baojieyeo
+account: baojieyeo
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 13424806
+bundleId: 9402954
+url: https://baojieyeo.shinyapps.io/Jakarta_Education_Analysis/
+version: 1
+asMultiple: FALSE
+asStatic: FALSE

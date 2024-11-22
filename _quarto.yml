@@ -21,6 +21,7 @@ project:
     - "Ex10.qmd"
     - "THE03.qmd"
     - "Ex12.qmd"
+    - "ICE11.qmd"
 
 website:
   title: "IS415 Geospatial Analytics"
@@ -80,6 +81,8 @@ website:
             href: "TakehomeEx/THE02/THE02.html"
           - text: "Take Home Exercise 3"
             href: "TakehomeEx/THE03/THE03.html"
+          - text: "Take Home Exercise 3 (Corrected)"
+            href: "TakehomeEx/THE03C/THE03C.html"
     right:
       - href: index.qmd
         text: Home
