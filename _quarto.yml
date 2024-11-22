@@ -22,6 +22,7 @@ project:
     - "THE03.qmd"
     - "Ex12.qmd"
     - "ICE11.qmd"
+    - "THE03C.qmd"
 
 website:
   title: "IS415 Geospatial Analytics"
